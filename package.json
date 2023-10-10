@@ -10,9 +10,20 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "eslint": "^8.51.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.28.1",
     "nodemon": "^3.0.1"
   },
   "dependencies": {
-    "@hapi/hapi": "^21.3.2"
+    "@hapi/hapi": "^21.3.2",
+    "@hapi/jwt": "^3.2.0",
+    "auto-bind": "^5.0.1",
+    "bcrypt": "^5.1.1",
+    "dotenv": "^16.3.1",
+    "joi": "^17.11.0",
+    "nanoid": "^5.0.1",
+    "node-pg-migrate": "^6.2.2",
+    "pg": "^8.11.3"
   }
 }
