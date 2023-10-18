@@ -4,11 +4,11 @@
 
 exports.up = (pgm) => {
   pgm.createTable('koss', {
-    kos_id: {
+    id: {
       type: 'VARCHAR',
       primaryKey: true,
     },
-    pemilik_id: {
+    owner_id: {
       type: 'VARCHAR',
       notNull: true,
     },
@@ -16,26 +16,26 @@ exports.up = (pgm) => {
       type: 'VARCHAR',
       notNull: true,
     },
-    nama_kos: {
+    name: {
       type: 'VARCHAR',
       notNull: true,
     },
-    alamat_kos: {
+    address: {
       type: 'VARCHAR',
       notNull: true,
     },
-    rating_kos: {
+    rating: {
       type: 'FLOAT',
       notNull: true,
     },
-    foto_kos: {
+    photos: {
       type: 'VARCHAR',
       notNull: true,
     },
   });
 
   pgm.addConstraint('koss', 'fk_koss.users_id_users.id', 'FOREIGN KEY(users_id) REFERENCES users(id) ON DELETE CASCADE');
-  pgm.addConstraint('koss', 'fk_koss.pemilik_id_pemilik_koss.id', 'FOREIGN KEY(pemilik_id) REFERENCES pemilik_koss(id) ON DELETE CASCADE');
+  pgm.addConstraint('koss', 'fk_koss.owner_id_owner.id', 'FOREIGN KEY(owner_id) REFERENCES owner(id) ON DELETE CASCADE');
 };
 
 exports.down = (pgm) => {

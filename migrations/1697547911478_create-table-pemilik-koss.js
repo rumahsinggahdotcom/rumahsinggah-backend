@@ -3,12 +3,12 @@
 // exports.shorthands = undefined;
 
 exports.up = (pgm) => {
-  pgm.createTable('pemilik_koss', {
+  pgm.createTable('owner', {
     id: {
       type: 'VARCHAR',
       primaryKey: true,
     },
-    nama_lengkap: {
+    fullname: {
       type: 'VARCHAR',
       notNull: true,
     },
@@ -20,7 +20,7 @@ exports.up = (pgm) => {
       type: 'VARCHAR',
       notNull: true,
     },
-    alamat: {
+    address: {
       type: 'VARCHAR',
       notNull: true,
     },
@@ -32,5 +32,5 @@ exports.up = (pgm) => {
 };
 
 exports.down = (pgm) => {
-  pgm.dropTable('pemilik_koss');
+  pgm.dropTable('owner');
 };

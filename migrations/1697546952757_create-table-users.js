@@ -8,7 +8,7 @@ exports.up = (pgm) => {
       type: 'VARCHAR',
       primaryKey: true,
     },
-    nama_lengkap: {
+    fullname: {
       type: 'VARCHAR',
       notNull: true,
     },
