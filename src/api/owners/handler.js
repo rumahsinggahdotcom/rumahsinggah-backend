@@ -39,7 +39,7 @@ class OwnersHandler {
     return response;
   }
 
-  async putOwnerPasswordByUsername(request, h) {
+  async putOwnerPasswordByUsernameHandler(request, h) {
     this._validator.validateOwnerPasswordPayload(request.payload);
     const { username } = request.params;
 
