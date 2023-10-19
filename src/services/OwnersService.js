@@ -70,7 +70,7 @@ class OwnersService {
     }
   }
 
-  async editPasswordById(username, {
+  async editPasswordByUsername(username, {
     oldPassword,
     newPassword,
   }) {

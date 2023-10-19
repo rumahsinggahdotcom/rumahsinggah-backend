@@ -38,6 +38,21 @@ class OwnersHandler {
     response.code(201);
     return response;
   }
+
+  async putOwnerPasswordByUsername(request, h) {
+    this._validator.validateOwnerPasswordPayload(request.payload);
+    const { username } = request.params;
+
+    await this._service.editPasswordByUsername(username, request.payload);
+
+    const response = h.response({
+      status: 'success',
+      message: 'Password berhasil diedit',
+    });
+
+    response.code(201);
+    return response;
+  }
 }
 
 module.exports = OwnersHandler;
