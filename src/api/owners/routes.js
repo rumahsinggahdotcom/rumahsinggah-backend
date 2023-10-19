@@ -5,11 +5,9 @@ const ownerRoutes = (handler) => [
     handler: handler.postOwnerHandler,
   },
   // {
-  //   method: 'GET',
-  //   path: '/owner',
-  //   handler: () => ({
-  //     value: 'EA',
-  //   }),
+  //   method: 'PUT',
+  //   path: '/owner/{id}',
+  //   handler: handler.putOwnerByIdHandler,
   // },
 ];
 

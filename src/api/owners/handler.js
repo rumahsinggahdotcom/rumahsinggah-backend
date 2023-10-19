@@ -24,9 +24,20 @@ class OwnersHandler {
     return response;
   }
 
-  // async putOwnerByIdHandler(request, h){
-  //   this._validator.validateOwnerPayload(request.payload);
-  // }
+  async putOwnerByIdHandler(request, h) {
+    this._validator.validateOwnerPayload(request.payload);
+    const { id } = request.params;
+
+    await this._service.editOwnerById(id, request.payload);
+
+    const response = h.response({
+      status: 'success',
+      message: 'Owner berhasil diedit',
+    });
+
+    response.code(200);
+    return response;
+  }
 }
 
 module.exports = OwnersHandler;
