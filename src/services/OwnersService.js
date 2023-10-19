@@ -40,11 +40,9 @@ class OwnersService {
     return rows[0].id;
   }
 
-  async verifyUsername({
-    username,
-  }) {
+  async verifyUsername(username) {
     const query = {
-      text: 'SELECT username from owners where username = $1',
+      text: 'SELECT username FROM owners WHERE username = $1',
       values: [username],
     };
 
@@ -75,11 +73,11 @@ class OwnersService {
     newPassword,
   }) {
     const queryUsername = await this.verifyUsername(username);
-    if (queryUsername.rows.length === 0) {
+    if (queryUsername.rows.length < 1) {
       throw new NotFoundError('Username tidak ditemukan');
     }
 
-    const match = await this.verifyPassword({ username, oldPassword });
+    const match = await this.verifyPassword(username, oldPassword);
 
     if (!match) {
       throw new AuthenticationError('Kredensial yang anda berikan salah.');
@@ -87,24 +85,21 @@ class OwnersService {
 
     const newHashedPassword = await bcrypt.hash(newPassword, 10);
     const query = {
-      text: 'UPDATE owners SET password = $1 where username = $2 RETURNING username',
-      value: [newHashedPassword, username],
+      text: 'UPDATE owners SET password = $1 where username = $2 RETURNING id',
+      values: [newHashedPassword, username],
     };
 
-    const { rows } = this._pool.query(query);
+    const { rows } = await this._pool.query(query);
 
     if (!rows.length) {
-      throw new NotFoundError('Gagal mengubah password. username tidak ditemukan');
+      throw new NotFoundError('Gagal memperbarui Owner. Id tidak ditemukan');
     }
   }
 
-  async verifyPassword({
-    username,
-    oldPassword,
-  }) {
+  async verifyPassword(username, oldPassword) {
     const query = {
       text: 'SELECT password FROM owners where username = $1',
-      value: [username],
+      values: [username],
     };
 
     const result = await this._pool.query(query);
