@@ -16,12 +16,12 @@ class UsersService {
     address,
     gender,
   }) {
-    await this.verifyNewUsername(username);
+    await this.verifyNewUser(username);
 
     const id = `user-${nanoid(16)}`;
     const hashedPassword = await bcrypt.hash(password, 10);
     const query = {
-      text: 'INSERT INTO users VALUES($1, $2, $3, $4) RETURNING id',
+      text: 'INSERT INTO users VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id',
       values: [id, fullname, username, hashedPassword, phoneNumber, address, gender],
     };
 

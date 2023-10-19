@@ -1,12 +1,12 @@
 const Joi = require('joi');
 
 const UsersPayloadSchema = Joi.object({
-  nama_lengkap: Joi.string().required(),
+  fullname: Joi.string().required(),
   username: Joi.string().required(),
   password: Joi.string().required(),
-  phone_number: Joi.string().required(),
+  phoneNumber: Joi.string().required(),
   address: Joi.string().required(),
-  option: Joi.string().valid('Perempuan', 'Laki-Laki'),
+  gender: Joi.string().valid('Perempuan', 'Laki-Laki'),
 });
 
 module.exports = { UsersPayloadSchema };
