@@ -13,13 +13,14 @@ class OwnersService {
     username,
     password,
     address,
+    gender,
     phoneNumber,
   }) {
     const id = `owner-${nanoid(16)}`;
     const hashedPassword = await bcrypt.hash(password, 10);
     const query = {
-      text: 'INSERT INTO owners VALUES($1, $2, $3, $4, %5, $6) RETURNING id',
-      values: [id, fullname, username, hashedPassword, address, phoneNumber],
+      text: 'INSERT INTO owners VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id',
+      values: [id, fullname, username, hashedPassword, address, gender, phoneNumber],
     };
 
     const { rows } = await this._pool.query(query);

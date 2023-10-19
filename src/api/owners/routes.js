@@ -4,13 +4,13 @@ const ownerRoutes = (handler) => [
     path: '/owner',
     handler: handler.postOwnerHandler,
   },
-  {
-    method: 'GET',
-    path: '/owner',
-    handler: () => ({
-      value: 'EA',
-    }),
-  },
+  // {
+  //   method: 'GET',
+  //   path: '/owner',
+  //   handler: () => ({
+  //     value: 'EA',
+  //   }),
+  // },
 ];
 
-exports.module = ownerRoutes;
+module.exports = ownerRoutes;

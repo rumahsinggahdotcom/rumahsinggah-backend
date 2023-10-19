@@ -9,4 +9,4 @@ const OwnersPayloadSchema = Joi.object({
   phoneNumber: Joi.string().required(),
 });
 
-module.exports = OwnersPayloadSchema;
+module.exports = { OwnersPayloadSchema };
