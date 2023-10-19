@@ -28,6 +28,10 @@ exports.up = (pgm) => {
       type: 'VARCHAR',
       notNull: true,
     },
+    phone_number: {
+      type: 'VARCHAR',
+      notNull: true,
+    },
   });
 };
 

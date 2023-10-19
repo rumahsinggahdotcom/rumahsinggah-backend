@@ -1,23 +1,35 @@
-require('dotenv').config();
+// require('dotenv').config();
 
 const hapi = require('@hapi/hapi');
-// const api = require('./api');
+
+// Owners
+const ownersApp = require('./api/owners');
+const OwnersService = require('./services/OwnersService');
+const OwnersValidator = require('./validator/owners');
 
 const init = async () => {
+  const ownersService = new OwnersService();
+
   const server = hapi.server({
-    port: 8000,
+    port: process.env.PORT,
     host: process.env.NODE_ENV !== 'production' ? 'localhost' : '0.0.0.0',
-  });
-  await server.start();
-  server.route(
-    {
-      method: 'GET',
-      path: '/',
-      handler: () => ({
-        value: 'Brillianita love Arfandy',
-      }),
+    routes: {
+      cors: {
+        origin: ['*'],
+      },
     },
-  );
+  });
+  await server.register([
+    {
+      plugin: ownersApp,
+      options: {
+        service: ownersService,
+        validator: OwnersValidator,
+      },
+    },
+  ]);
+
+  await server.start();
   console.log('TEST');
 };
 
