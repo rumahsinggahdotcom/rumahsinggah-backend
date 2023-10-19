@@ -23,6 +23,10 @@ class OwnersHandler {
     response.code(201);
     return response;
   }
+
+  // async putOwnerByIdHandler(request, h){
+  //   this._validator.validateOwnerPayload(request.payload);
+  // }
 }
 
 module.exports = OwnersHandler;
