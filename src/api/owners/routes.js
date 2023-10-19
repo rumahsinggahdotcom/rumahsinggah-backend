@@ -4,11 +4,11 @@ const ownerRoutes = (handler) => [
     path: '/owner',
     handler: handler.postOwnerHandler,
   },
-  // {
-  //   method: 'PUT',
-  //   path: '/owner/{id}',
-  //   handler: handler.putOwnerByIdHandler,
-  // },
+  {
+    method: 'PUT',
+    path: '/owner/{id}',
+    handler: handler.putOwnerByIdHandler,
+  },
 ];
 
 module.exports = ownerRoutes;
