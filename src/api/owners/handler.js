@@ -35,7 +35,7 @@ class OwnersHandler {
       message: 'Owner berhasil diedit',
     });
 
-    response.code(200);
+    response.code(201);
     return response;
   }
 }

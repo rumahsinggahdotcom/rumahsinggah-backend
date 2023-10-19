@@ -9,4 +9,9 @@ const OwnersPayloadSchema = Joi.object({
   phoneNumber: Joi.string().required(),
 });
 
-module.exports = { OwnersPayloadSchema };
+const OwnersPasswordPayloadSchema = Joi.object({
+  oldPassword: Joi.string().required(),
+  newPassword: Joi.string().required(),
+});
+
+module.exports = { OwnersPayloadSchema, OwnersPasswordPayloadSchema };
