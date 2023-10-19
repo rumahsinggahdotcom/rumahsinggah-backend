@@ -35,7 +35,7 @@ exports.up = (pgm) => {
   });
 
   pgm.addConstraint('koss', 'fk_koss.users_id_users.id', 'FOREIGN KEY(users_id) REFERENCES users(id) ON DELETE CASCADE');
-  pgm.addConstraint('koss', 'fk_koss.owner_id_owner.id', 'FOREIGN KEY(owner_id) REFERENCES owner(id) ON DELETE CASCADE');
+  pgm.addConstraint('koss', 'fk_koss.owner_id_owners.id', 'FOREIGN KEY(owner_id) REFERENCES owners(id) ON DELETE CASCADE');
 };
 
 exports.down = (pgm) => {
