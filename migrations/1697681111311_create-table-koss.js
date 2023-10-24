@@ -26,11 +26,11 @@ exports.up = (pgm) => {
     },
     rating: {
       type: 'FLOAT',
-      notNull: true,
+      notNull: false,
     },
     photos: {
       type: 'VARCHAR',
-      notNull: true,
+      notNull: false,
     },
   });
 
