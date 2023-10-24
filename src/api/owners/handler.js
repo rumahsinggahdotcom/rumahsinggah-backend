@@ -39,11 +39,11 @@ class OwnersHandler {
     return response;
   }
 
-  async putOwnerPasswordByUsernameHandler(request, h) {
+  async putOwnerPasswordByIdHandler(request, h) {
     this._validator.validateOwnerPasswordPayload(request.payload);
-    const { username } = request.params;
+    const { id } = request.params;
 
-    await this._service.editPasswordByUsername(username, request.payload);
+    await this._service.editPasswordById(id, request.payload);
 
     const response = h.response({
       status: 'success',

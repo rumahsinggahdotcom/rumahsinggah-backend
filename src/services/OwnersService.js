@@ -3,7 +3,7 @@ const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const InvariantError = require('../exceptions/InvariantError');
 const NotFoundError = require('../exceptions/NotFoundError');
-const AuthenticationError = require('../exceptions/AuthenticationError');
+// const AuthenticationError = require('../exceptions/AuthenticationError');
 
 class OwnersService {
   constructor() {
@@ -68,25 +68,21 @@ class OwnersService {
     }
   }
 
-  async editPasswordByUsername(username, {
+  async editPasswordById(id, {
     oldPassword,
     newPassword,
   }) {
-    const queryUsername = await this.verifyUsername(username);
-    if (queryUsername.rows.length < 1) {
-      throw new NotFoundError('Username tidak ditemukan');
-    }
-
-    const match = await this.verifyPassword(username, oldPassword);
+    const match = await this.verifyPassword(id, oldPassword);
 
     if (!match) {
-      throw new AuthenticationError('Kredensial yang anda berikan salah.');
+      console.log('ini match', match);
+      throw new InvariantError('Gagal Mengubah Password. Kredensial yang anda berikan salah');
     }
 
     const newHashedPassword = await bcrypt.hash(newPassword, 10);
     const query = {
-      text: 'UPDATE owners SET password = $1 where username = $2 RETURNING id',
-      values: [newHashedPassword, username],
+      text: 'UPDATE owners SET password = $1 where id = $2 RETURNING id',
+      values: [newHashedPassword, id],
     };
 
     const { rows } = await this._pool.query(query);
@@ -96,17 +92,22 @@ class OwnersService {
     }
   }
 
-  async verifyPassword(username, oldPassword) {
+  async verifyPassword(id, oldPassword) {
     const query = {
-      text: 'SELECT password FROM owners where username = $1',
-      values: [username],
+      text: 'SELECT password FROM owners where id = $1',
+      values: [id],
     };
 
     const result = await this._pool.query(query);
+    console.log(result);
+
+    if (!result.rowCount) {
+      throw new NotFoundError('Gagal Mengubah Password. Id tidak ditemukan');
+    }
     const { password: hashedPassword } = result.rows[0];
 
     const match = await bcrypt.compare(oldPassword, hashedPassword);
-
+    console.log('testing purpose match:', match);
     return match;
   }
 }

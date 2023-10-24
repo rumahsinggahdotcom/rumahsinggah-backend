@@ -11,8 +11,8 @@ const ownerRoutes = (handler) => [
   },
   {
     method: 'PUT',
-    path: '/owner/changepassword/{username}',
-    handler: handler.putOwnerPasswordByUsernameHandler,
+    path: '/owner/{id}/changepassword',
+    handler: handler.putOwnerPasswordByIdHandler,
   },
 ];
 
