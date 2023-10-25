@@ -28,10 +28,6 @@ exports.up = (pgm) => {
       type: 'FLOAT',
       notNull: false,
     },
-    photos: {
-      type: 'VARCHAR',
-      notNull: false,
-    },
   });
 
   pgm.addConstraint('koss', 'fk_koss.user_id_users.id', 'FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE');
