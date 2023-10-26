@@ -3,6 +3,7 @@ const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const InvariantError = require('../exceptions/InvariantError');
 const NotFoundError = require('../exceptions/NotFoundError');
+const { mapDBToModel } = require('../utils');
 // const AuthenticationError = require('../exceptions/AuthenticationError');
 
 class OwnersService {
@@ -38,6 +39,22 @@ class OwnersService {
     }
 
     return rows[0].id;
+  }
+
+  async getOwnerById(id) {
+    const queryOwner = {
+      text: 'SELECT * FROM owners WHERE id = $1',
+      values: [id],
+    };
+
+    const { rows } = await this._pool.query(queryOwner);
+    console.log(rows.map(mapDBToModel)[0]);
+
+    if (!rows.length) {
+      throw new NotFoundError('Owner tidak ditemukan');
+    }
+
+    return rows.map(mapDBToModel)[0];
   }
 
   async verifyUsername(username) {
