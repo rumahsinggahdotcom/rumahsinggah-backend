@@ -3,7 +3,7 @@
 exports.shorthands = undefined;
 
 exports.up = (pgm) => {
-  pgm.createTable('photo_koss', {
+  pgm.createTable('image_koss', {
     id: {
       type: 'VARCHAR',
       primaryKey: true,
@@ -12,15 +12,15 @@ exports.up = (pgm) => {
       type: 'VARCHAR',
       notNull: true,
     },
-    photos: {
+    images: {
       type: 'VARCHAR',
       notNull: false,
     },
   });
 
-  pgm.addConstraint('photo_koss', 'fk_photo_koss.kos_id_koss.id', 'FOREIGN KEY (kos_id) REFERENCES koss(id) ON DELETE CASCADE');
+  pgm.addConstraint('image_koss', 'fk_image_koss.kos_id_koss.id', 'FOREIGN KEY (kos_id) REFERENCES koss(id) ON DELETE CASCADE');
 };
 
 exports.down = (pgm) => {
-  pgm.dropTable('photo_koss');
+  pgm.dropTable('image_koss');
 };
