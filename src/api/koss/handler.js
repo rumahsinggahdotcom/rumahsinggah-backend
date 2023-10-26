@@ -8,9 +8,21 @@ class KossHandler {
   }
 
   async postKosHandler(request, h) {
-    await this._validator.validateKossPayload(request.payload);
+    const { image } = request.payload;
+    const ownerId = request.params;
+    const {
+      name,
+      address,
+    } = request.payload;
 
-    const kosId = await this._service.addKos(request.payload);
+    await this._validator.validateKosPayload({ ownerId, name, address });
+
+    if (image) {
+      await this._validator.validateImageKosPayload(image.hapi.headers);
+      await this._imageKosService.addImageKos({ image });
+    }
+
+    const kosId = await this._kosService.addKos({ ownerId, name, address });
 
     const response = h.response({
       status: 'success',
