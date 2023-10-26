@@ -8,7 +8,7 @@ class OwnersHandler {
   }
 
   async postOwnerHandler(request, h) {
-    this._validator.validateOwnerPayload(request.payload);
+    await this._validator.validateOwnerPayload(request.payload);
 
     const ownerId = await this._service.addOwner(request.payload);
 
