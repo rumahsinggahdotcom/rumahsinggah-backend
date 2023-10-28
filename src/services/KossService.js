@@ -20,7 +20,7 @@ class KossService {
 
     const { rows } = await this._pool.query(query);
 
-    if (rows[0].id) {
+    if (!rows[0].id) {
       throw new InvariantError('Kos Gagal Ditambahkan.');
     }
 
