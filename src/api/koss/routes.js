@@ -1,7 +1,7 @@
 const kossRoutes = (handler) => [
   {
     method: 'POST',
-    path: '/owner/addkos',
+    path: '/addkos',
     handler: handler.postKosHandler,
     options: {
       payload: {
@@ -11,6 +11,16 @@ const kossRoutes = (handler) => [
         maxBytes: 512000, // 500KB
       },
     },
+  },
+  {
+    method: 'GET',
+    path: '/koss',
+    handler: handler.getKossHandler,
+  },
+  {
+    method: 'GET',
+    path: '/koss/{id}',
+    handler: handler.getKosByIdHandler,
   },
 ];
 
