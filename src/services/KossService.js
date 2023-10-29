@@ -1,6 +1,7 @@
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const InvariantError = require('../exceptions/InvariantError');
+const { mapDBToModel } = require('../utils');
 
 class KossService {
   constructor() {
@@ -29,16 +30,40 @@ class KossService {
 
   async getKoss() {
     const query = {
-      text: 'SELECT * FROM koss LEFT JOIN image_koss ON koss.id = image_koss.kos_id',
+      text: 'SELECT k.id, k.name, k.owner_id, k.address, i.images FROM koss AS k LEFT JOIN image_koss AS i ON k.id = i.kos_id',
     };
     const { rows } = await this._pool.query(query);
-    console.log(rows);
-    Object.values(rows.reduce((a, { kos_id, images }) => {
-      console.log('a: ', a);
-      console.log('kosId: ', kos_id);
-      console.log('images: ', images);
-      // return 'yes';
-    }));
+    console.log('result:', rows);
+    const groupedData = rows.reduce((result, item) => {
+      const existingItem = result.find((groupedItem) => groupedItem.id === item.id);
+
+      if (existingItem) {
+        existingItem.images.push({ image: item.images });
+      } else {
+        result.push({
+          id: item.id,
+          name: item.name,
+          owner_id: item.owner_id,
+          address: item.address,
+          images: [{ image: item.images }],
+        });
+      }
+
+      return result;
+    }, []);
+
+    return groupedData.map(mapDBToModel);
+    // const query = {
+    //   text: 'SELECT * FROM koss LEFT JOIN image_koss ON koss.id = image_koss.kos_id',
+    // };
+    // const { rows } = await this._pool.query(query);
+    // console.log(rows);
+    // Object.values(rows.reduce((a, { kos_id, images }) => {
+    //   console.log('a: ', a);
+    //   console.log('kosId: ', kos_id);
+    //   console.log('images: ', images);
+    //   // return 'yes';
+    // }));
     // const resultKos = await this._pool.query(queryKos);
 
     // const queryImageKos = {
