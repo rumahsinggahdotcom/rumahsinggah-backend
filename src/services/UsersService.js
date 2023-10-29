@@ -45,6 +45,12 @@ class UsersService {
       throw new InvariantError('User failed to add. Username or phone number have been used');
     }
   }
+
+  async getUsersByKosId(kosId) {
+    const query = {
+      text: 'SELECT id FROM users WHERE '
+    }
+  }
 }
 
 module.exports = UsersService;
