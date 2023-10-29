@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const InvariantError = require('../exceptions/InvariantError');
+const { mapDBToModel } = require('../utils');
 
 class UsersService {
   constructor() {
@@ -48,8 +49,13 @@ class UsersService {
 
   async getUsersByKosId(kosId) {
     const query = {
-      text: 'SELECT id FROM users WHERE '
-    }
+      text: 'SELECT u.id, u.fullname, u.phone_number, u.address, u.gender, u.username, r. type, rn.number FROM users AS u INNER JOIN booking AS b ON u.id = b.user_id INNER JOIN room_num AS rn ON b.room_num_id = rn.id INNER JOIN room AS r ON r.id = rn.room_id INNER JOIN koss AS k ON k.id = r.kos_id WHERE k.id = $1',
+      values: [kosId],
+    };
+    const { rows } = await this._pool.query(query);
+
+    console.log('result', rows);
+    return rows.map(mapDBToModel);
   }
 }
 

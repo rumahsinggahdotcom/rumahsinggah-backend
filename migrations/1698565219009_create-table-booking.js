@@ -34,7 +34,7 @@ exports.up = (pgm) => {
 
   pgm.addConstraint('booking', 'fk_booking.room_num_id_room_num.id', 'FOREIGN KEY(room_num_id) REFERENCES room_num(id) ON DELETE CASCADE');
   pgm.addConstraint('booking', 'fk_booking.user_id_users.id', 'FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE');
-  pgm.addConstraint('booking', 'fk_booking.owner_id_owners.id', 'FOREIGN KEY(room_num_id) REFERENCES owners(id) ON DELETE CASCADE');
+  pgm.addConstraint('booking', 'fk_booking.owner_id_owners.id', 'FOREIGN KEY(owner_id) REFERENCES owners(id) ON DELETE CASCADE');
 };
 
 exports.down = (pgm) => {
