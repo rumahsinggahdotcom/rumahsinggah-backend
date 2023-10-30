@@ -48,8 +48,10 @@ class UsersService {
 
   async getUsersByKosId(kosId) {
     const query = {
-      text: 'SELECT id FROM users WHERE '
-    }
+      text: 'SELECT id FROM users WHERE ',
+    };
+    const result = await this._pool.query(query);
+    console.log(result, kosId, query);
   }
 }
 
