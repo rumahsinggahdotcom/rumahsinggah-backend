@@ -28,6 +28,45 @@ class KossService {
     return rows[0].id;
   }
 
+  async addImageKos(url, kosId) {
+    const id = `image_koss-${nanoid(16)}`;
+
+    const query = {
+      text: 'INSERT INTO image_koss values($1, $2, $3) RETURNING id',
+      values: [id, kosId, url],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows[0].id) {
+      throw new InvariantError('Image Kos Gagal Ditambahkan.');
+    }
+
+    return rows[0].id;
+  }
+
+  async addRoom(kosId, {
+    type,
+    maxPeople,
+    price,
+    quantity,
+  }) {
+    const roomId = `room_koss-${nanoid(16)}`;
+
+    const query = {
+      text: 'INSERT INTO room values ($1, $2, $3, $4, $5, $6) RETURNING id',
+      values: [roomId, type, maxPeople, price, kosId, quantity],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows[0].id) {
+      throw new InvariantError('Room Kos Gagal Ditambahkan.');
+    }
+
+    return rows[0].id;
+  }
+
   async getKoss() {
     const query = {
       text: 'SELECT k.id, k.name, k.owner_id, k.address, i.images FROM koss AS k LEFT JOIN image_koss AS i ON k.id = i.kos_id',
@@ -53,30 +92,6 @@ class KossService {
     }, []);
 
     return groupedData.map(mapDBToModel);
-    // const query = {
-    //   text: 'SELECT * FROM koss LEFT JOIN image_koss ON koss.id = image_koss.kos_id',
-    // };
-    // const { rows } = await this._pool.query(query);
-    // console.log(rows);
-    // Object.values(rows.reduce((a, { kos_id, images }) => {
-    //   console.log('a: ', a);
-    //   console.log('kosId: ', kos_id);
-    //   console.log('images: ', images);
-    //   // return 'yes';
-    // }));
-    // const resultKos = await this._pool.query(queryKos);
-
-    // const queryImageKos = {
-    //   text: 'SELECT * FROM image_koss',
-    // };
-
-    // const resultImageKos = await this._pool.query(queryKos);
-
-    //   if (!rows.length) {
-    //     throw new InvariantError('Kos Tidak Ditemukan.');
-    //   }
-    //   // console.log(rows);
-    //   return rows;
   }
 
   async getKosById(kosId) {
@@ -93,16 +108,6 @@ class KossService {
     const resultKos = await this._pool.query(queryKos);
     const kos = resultKos.rows[0];
     kos.image = resultImageKos.rows;
-
-    console.log(kos);
-
-    // console.log(result);
-
-    // if (!rows.length) {
-    //   throw new InvariantError('Kos tidak ditemukan.');
-    // }
-
-    // return rows;
   }
 }
 
