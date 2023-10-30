@@ -12,10 +12,6 @@ exports.up = (pgm) => {
       type: 'VARCHAR',
       notNull: true,
     },
-    user_id: {
-      type: 'VARCHAR',
-      notNull: false,
-    },
     name: {
       type: 'VARCHAR',
       notNull: true,
@@ -29,8 +25,6 @@ exports.up = (pgm) => {
       notNull: false,
     },
   });
-
-  pgm.addConstraint('koss', 'fk_koss.user_id_users.id', 'FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE');
   pgm.addConstraint('koss', 'fk_koss.owner_id_owners.id', 'FOREIGN KEY(owner_id) REFERENCES owners(id) ON DELETE CASCADE');
 };
 

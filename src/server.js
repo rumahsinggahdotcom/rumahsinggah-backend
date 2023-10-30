@@ -16,7 +16,6 @@ const UsersValidator = require('./validator/users');
 // Koss
 const kossApp = require('./api/koss');
 const KossService = require('./services/KossService');
-const ImageKossService = require('./services/ImageKossService');
 const KossValidator = require('./validator/koss');
 
 // upload
@@ -26,7 +25,6 @@ const init = async () => {
   const usersService = new UsersService();
   const ownersService = new OwnersService();
   const kossService = new KossService();
-  const imageKossService = new ImageKossService();
   const storageService = new StorageService(path.resolve(__dirname, 'api/koss/file'));
 
   const server = hapi.server({
