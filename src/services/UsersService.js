@@ -54,7 +54,10 @@ class UsersService {
     };
     const { rows } = await this._pool.query(query);
 
-    console.log('result', rows);
+    if (!rows.length) {
+      throw new InvariantError('User Tidak Ditemukan.');
+    }
+
     return rows.map(mapDBToModel);
   }
 }
