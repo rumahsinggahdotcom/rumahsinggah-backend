@@ -45,28 +45,6 @@ class KossService {
     return rows[0].id;
   }
 
-  async addRoom(kosId, {
-    type,
-    maxPeople,
-    price,
-    quantity,
-  }) {
-    const roomId = `room_koss-${nanoid(16)}`;
-
-    const query = {
-      text: 'INSERT INTO room values ($1, $2, $3, $4, $5, $6) RETURNING id',
-      values: [roomId, type, maxPeople, price, kosId, quantity],
-    };
-
-    const { rows } = await this._pool.query(query);
-
-    if (!rows[0].id) {
-      throw new InvariantError('Room Kos Gagal Ditambahkan.');
-    }
-
-    return rows[0].id;
-  }
-
   async getKoss() {
     const query = {
       text: 'SELECT k.id, k.name, k.owner_id, k.address, i.images FROM koss AS k LEFT JOIN image_koss AS i ON k.id = i.kos_id',

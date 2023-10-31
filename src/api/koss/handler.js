@@ -11,7 +11,6 @@ class KossHandler {
 
   async postKosHandler(request, h) {
     const { images } = request.payload;
-    const { rooms } = request.payload;
     const {
       ownerId,
       name,
@@ -20,19 +19,6 @@ class KossHandler {
 
     await this._validator.validateKosPayload({ ownerId, name, address });
     const kosId = await this._kossService.addKos({ ownerId, name, address });
-
-    if (rooms) {
-      await Promise.all(rooms.map(async (room) => {
-        await this._validator.validateRoomPayload(room);
-        await this._kossService.addRoom(room);
-        const { roomNums } = room;
-        if (roomNums) {
-          await Promise.all(roomNums.map(async (roomNum) => {
-            await this._validator.validateRoomNumPayload(roomNum);
-          }));
-        }
-      }));
-    }
 
     if (images) {
       await Promise.all(images.map(async (image) => {
