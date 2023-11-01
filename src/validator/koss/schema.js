@@ -11,7 +11,7 @@ const KosImagePayloadSchema = Joi.object({
 }).unknown();
 
 const RoomNumSchema = Joi.object({
-  number: Joi.integer().required(),
+  number: Joi.number().integer().options({ convert: false }).required(),
   status: Joi.string().required(),
 });
 
