@@ -69,6 +69,22 @@ class KossHandler {
     response.code(200);
     return response;
   }
+
+  async putKosByIdHandler(request, h) {
+    await this._validator.validateKosPayload(request.payload);
+
+    const { id } = request.params;
+
+    await this._kossService.editKosById(id, request.payload);
+
+    const response = h.response({
+      status: 'success',
+      message: 'Kos Berhasil Diedit',
+    });
+
+    response.code(200);
+    return response;
+  }
 }
 
 module.exports = KossHandler;

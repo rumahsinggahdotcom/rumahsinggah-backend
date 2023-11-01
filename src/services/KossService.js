@@ -1,6 +1,7 @@
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const InvariantError = require('../exceptions/InvariantError');
+const NotFoundError = require('../exceptions/NotFoundError');
 const { mapDBToModel } = require('../utils');
 
 class KossService {
@@ -84,8 +85,31 @@ class KossService {
       values: [kosId],
     };
     const resultKos = await this._pool.query(queryKos);
+    if (!resultKos.rows) {
+      throw new NotFoundError('Kos Tidak Ditemukan.');
+    }
     const kos = resultKos.rows[0];
     kos.image = resultImageKos.rows;
+
+    return kos;
+  }
+
+  async editKosById(kossId, {
+    name,
+    address,
+  }) {
+    const query = {
+      text: 'UPDATE koss SET name = $2, address = $3 WHERE id = $1',
+      values: [kossId, name, address],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows[0].id) {
+      throw new NotFoundError('Gagal Memperbarui Koss. Id Tidak Ditemukan.');
+    }
+
+    return rows[0].id;
   }
 }
 

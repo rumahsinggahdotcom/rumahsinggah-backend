@@ -22,6 +22,11 @@ const kossRoutes = (handler) => [
     path: '/koss/{id}',
     handler: handler.getKosByIdHandler,
   },
+  {
+    method: 'PUT',
+    path: '/koss/{id}',
+    handler: handler.putKosByIdHandler,
+  },
 ];
 
 module.exports = kossRoutes;
