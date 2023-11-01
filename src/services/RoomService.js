@@ -43,5 +43,21 @@ class RoomService {
 
     return rows;
   }
+
+  async editRoomById(roomId, {
+    type,
+    maxPeople,
+    price,
+    quantity,
+  }) {
+    const query = {
+      text: 'UPDATE room SET type = $2, max_people = $3, price = $4, quantity = $5 WHERE id = $1',
+      values: [roomId, type, maxPeople, price, quantity],
+    };
+
+    const result = await this._pool.query(query);
+
+    console.log(result);
+  }
 }
 module.exports = RoomService;

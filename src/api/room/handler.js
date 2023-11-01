@@ -4,7 +4,7 @@ class RoomHandler {
   constructor(service, validator) {
     this._service = service;
     this._validator = validator;
-    this(autoBind);
+    autoBind(this);
   }
 
   async postRoomHandler(request, h) {
@@ -30,6 +30,22 @@ class RoomHandler {
       status: 'success',
       data: {
         rooms,
+      },
+    });
+
+    response.code(200);
+
+    return response;
+  }
+
+  async putRoomByIdHandler(request, h) {
+    const { id } = request.params;
+    const roomId = await this._service.editRoomById(id, request.payload);
+
+    const response = h.response({
+      status: 'success',
+      data: {
+        roomId,
       },
     });
 

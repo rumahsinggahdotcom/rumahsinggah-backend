@@ -18,6 +18,11 @@ const kossApp = require('./api/koss');
 const KossService = require('./services/KossService');
 const KossValidator = require('./validator/koss');
 
+// Room
+const roomApp = require('./api/room');
+const RoomService = require('./services/RoomService');
+const RoomValidator = require('./validator/room');
+
 // upload
 const StorageService = require('./services/StorageService');
 
@@ -26,6 +31,7 @@ const init = async () => {
   const ownersService = new OwnersService();
   const kossService = new KossService();
   const storageService = new StorageService(path.resolve(__dirname, 'api/koss/file'));
+  const roomService = new RoomService();
 
   const server = hapi.server({
     port: process.env.PORT,
@@ -56,9 +62,15 @@ const init = async () => {
       plugin: kossApp,
       options: {
         kossService,
-        imageKossService,
         storageService,
         validator: KossValidator,
+      },
+    },
+    {
+      plugin: roomApp,
+      options: {
+        service: roomService,
+        validator: RoomValidator,
       },
     },
   ]);
