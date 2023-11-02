@@ -1,7 +1,7 @@
 const kossRoutes = (handler) => [
   {
     method: 'POST',
-    path: '/addkos',
+    path: '/koss',
     handler: handler.postKosHandler,
     options: {
       payload: {

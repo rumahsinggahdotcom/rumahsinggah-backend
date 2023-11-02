@@ -92,7 +92,6 @@ class OwnersService {
     const match = await this.verifyPassword(id, oldPassword);
 
     if (!match) {
-      console.log('ini match', match);
       throw new InvariantError('Gagal Mengubah Password. Kredensial yang anda berikan salah');
     }
 

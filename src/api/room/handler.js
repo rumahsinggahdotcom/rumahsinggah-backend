@@ -23,8 +23,9 @@ class RoomHandler {
     return response;
   }
 
-  async getRoomByKosIdHandler(request, h) {
-    const rooms = await this._service.getRoomByKosId();
+  async getRoomsByKosIdHandler(request, h) {
+    const { kosId } = request.params;
+    const rooms = await this._service.getRoomsByKosId(kosId);
 
     const response = h.response({
       status: 'success',
@@ -34,7 +35,21 @@ class RoomHandler {
     });
 
     response.code(200);
+    return response;
+  }
 
+  async getRoomByIdHandler(request, h) {
+    console.log(request.params);
+    const room = await this._service.getRoomById();
+
+    const response = h.response({
+      status: 'success',
+      data: {
+        room,
+      },
+    });
+
+    response.code(200);
     return response;
   }
 

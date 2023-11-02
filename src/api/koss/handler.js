@@ -1,15 +1,15 @@
 const autobind = require('auto-bind');
 
 class KossHandler {
-  constructor(kossService, imageKossService, storageService, validator) {
+  constructor(kossService, storageService, validator) {
     this._kossService = kossService;
-    this._imageKossService = imageKossService;
     this._storageService = storageService;
     this._validator = validator;
     autobind(this);
   }
 
   async postKosHandler(request, h) {
+    console.log(request.payload);
     const { images } = request.payload;
     const {
       ownerId,

@@ -1,6 +1,7 @@
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const InvariantError = require('../exceptions/InvariantError');
+const NotFoundError = require('../exceptions/NotFoundError');
 
 class RoomService {
   constructor() {
@@ -29,16 +30,31 @@ class RoomService {
     return rows[0].id;
   }
 
-  async getRoomByKosId(kosId) {
+  async getRoomsByKosId(kosId) {
     const query = {
-      text: 'SELECT * FROM room WHERE kos_id = $1',
+      text: 'SELECT * FROM room where kos_id = $1',
       values: [kosId],
     };
 
     const { rows } = await this._pool.query(query);
 
     if (!rows.length) {
-      throw new InvariantError('Room Tidak Ditemukan.');
+      throw new NotFoundError('Rooms tidak ditemukan.');
+    }
+
+    return rows;
+  }
+
+  async getRoomById(id) {
+    const query = {
+      text: 'SELECT * FROM room where id = $1',
+      values: [id],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows.length) {
+      throw new NotFoundError('Room tidak ditemukan.');
     }
 
     return rows;
@@ -51,13 +67,17 @@ class RoomService {
     quantity,
   }) {
     const query = {
-      text: 'UPDATE room SET type = $2, max_people = $3, price = $4, quantity = $5 WHERE id = $1',
+      text: 'UPDATE room SET type = $2, max_people = $3, price = $4, quantity = $5 WHERE id = $1 RETURNING id',
       values: [roomId, type, maxPeople, price, quantity],
     };
 
-    const result = await this._pool.query(query);
+    const { rows } = await this._pool.query(query);
 
-    console.log(result);
+    if (!rows[0].id) {
+      throw new InvariantError('Gagal Memperbarui Room. Id Tidak Ditemukan.');
+    }
+
+    return rows[0].id;
   }
 }
 module.exports = RoomService;

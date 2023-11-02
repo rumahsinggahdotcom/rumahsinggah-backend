@@ -1,17 +1,22 @@
 const routes = (handler) => [
   {
-    method: 'PUT',
-    path: 'koss/room/addroom',
+    method: 'POST',
+    path: '/koss/room',
     handler: handler.postRoomHandler,
   },
   {
     method: 'GET',
-    path: 'koss/{id}/room',
-    handler: handler.getRoomByKosIdHandler,
+    path: '/koss/{id}/rooms',
+    handler: handler.getRoomsByKosIdHandler,
+  },
+  {
+    method: 'GET',
+    path: '/koss/{kosId}/rooms/{roomId}',
+    handler: handler.getRoomByIdHandler,
   },
   {
     method: 'PUT',
-    path: 'koss/room/{id}',
+    path: '/koss/room/{id}',
     handler: handler.putRoomByIdHandler,
   },
 ];

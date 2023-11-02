@@ -14,10 +14,11 @@ class KossService {
     name,
     address,
   }) {
+    console.log(ownerId, name, address);
     const id = `koss-${nanoid(16)}`;
     const query = {
-      text: 'INSERT INTO koss values($1, $2, $3, $4, $5, $6) RETURNING id',
-      values: [id, ownerId, null, name, address, null],
+      text: 'INSERT INTO koss values($1, $2, $3, $4, $5) RETURNING id',
+      values: [id, ownerId, name, address, null],
     };
 
     const { rows } = await this._pool.query(query);
