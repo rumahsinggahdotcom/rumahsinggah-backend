@@ -8,7 +8,7 @@ class OwnersHandler {
   }
 
   async postOwnerHandler(request, h) {
-    this._validator.validateOwnerPayload(request.payload);
+    await this._validator.validateOwnerPayload(request.payload);
 
     const ownerId = await this._service.addOwner(request.payload);
 
@@ -21,6 +21,21 @@ class OwnersHandler {
     });
 
     response.code(201);
+    return response;
+  }
+
+  async getOwnerByIdHandler(request, h) {
+    const { id } = request.params;
+    const owner = await this._service.getOwnerById(id);
+
+    const response = h.response({
+      status: 'success',
+      data: {
+        owner,
+      },
+    });
+
+    response.code(200);
     return response;
   }
 

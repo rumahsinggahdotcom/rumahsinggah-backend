@@ -1,5 +1,6 @@
 require('dotenv').config();
 const hapi = require('@hapi/hapi');
+const path = require('path');
 const ClientError = require('./exceptions/ClientError');
 
 // Owners
@@ -12,9 +13,25 @@ const users = require('./api/users');
 const UsersService = require('./services/UsersService');
 const UsersValidator = require('./validator/users');
 
+// Koss
+const kossApp = require('./api/koss');
+const KossService = require('./services/KossService');
+const KossValidator = require('./validator/koss');
+
+// Room
+const roomApp = require('./api/room');
+const RoomService = require('./services/RoomService');
+const RoomValidator = require('./validator/room');
+
+// upload
+const StorageService = require('./services/StorageService');
+
 const init = async () => {
   const usersService = new UsersService();
   const ownersService = new OwnersService();
+  const kossService = new KossService();
+  const storageService = new StorageService(path.resolve(__dirname, 'api/koss/file'));
+  const roomService = new RoomService();
 
   const server = hapi.server({
     port: process.env.PORT,
@@ -39,6 +56,21 @@ const init = async () => {
       options: {
         service: ownersService,
         validator: OwnersValidator,
+      },
+    },
+    {
+      plugin: kossApp,
+      options: {
+        kossService,
+        storageService,
+        validator: KossValidator,
+      },
+    },
+    {
+      plugin: roomApp,
+      options: {
+        service: roomService,
+        validator: RoomValidator,
       },
     },
   ]);

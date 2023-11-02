@@ -2,7 +2,7 @@ const Joi = require('joi');
 
 const OwnersPayloadSchema = Joi.object({
   fullname: Joi.string().required(),
-  username: Joi.string().trim().required(),
+  username: Joi.string().regex(/^\S+$/).required(),
   password: Joi.string().regex(/(?=.*[a-z])[A-Za-z\d$@$!%*?&.]{8,20}/)
     .required()
     .min(8)

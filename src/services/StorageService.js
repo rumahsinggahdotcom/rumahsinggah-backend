@@ -9,9 +9,10 @@ class StorageService {
     }
   }
 
-  writefile(file, meta) {
+  writeFile(file, meta) {
     const filename = +new Date() + meta.filename;
-    const path = `${this.folder}/${filename}`;
+    // const filename = '1698908338047figure 10.10.png';
+    const path = `${this._folder}/${filename}`;
 
     const fileStream = fs.createWriteStream(path);
 

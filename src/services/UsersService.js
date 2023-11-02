@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const InvariantError = require('../exceptions/InvariantError');
+const { mapDBToModel } = require('../utils');
 
 class UsersService {
   constructor() {
@@ -44,6 +45,20 @@ class UsersService {
     if (result.rows.length > 0) {
       throw new InvariantError('User failed to add. Username or phone number have been used');
     }
+  }
+
+  async getUsersByKosId(kosId) {
+    const query = {
+      text: 'SELECT u.id, u.fullname, u.phone_number, u.address, u.gender, u.username, r. type FROM users AS u INNER JOIN booking AS b ON u.id = b.user_id INNER JOIN room AS r ON b.room_id = r.id INNER JOIN koss AS k ON k.id = r.kos_id WHERE k.id = $1',
+      values: [kosId],
+    };
+    const { rows } = await this._pool.query(query);
+
+    if (!rows.length) {
+      throw new InvariantError('User Tidak Ditemukan.');
+    }
+
+    return rows.map(mapDBToModel);
   }
 }
 

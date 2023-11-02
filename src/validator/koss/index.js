@@ -1,12 +1,30 @@
 const InvariantError = require('../../exceptions/InvariantError');
-const KossPayloadSchema = require('./schema');
+const {
+  KosPayloadSchema, KosImagePayloadSchema, RoomNumSchema,
+} = require('./schema');
 
 const KossValidator = {
-  validateKossPayload: (payload) => {
-    const validationResult = KossPayloadSchema.validate(payload);
+  validateKosPayload: (payload) => {
+    const kosValidationResult = KosPayloadSchema.validate(payload);
 
-    if (!validationResult) {
-      throw new InvariantError(validationResult.error.message);
+    if (!kosValidationResult) {
+      throw new InvariantError(kosValidationResult.error.message);
+    }
+  },
+
+  validateImageKosPayload: (payload) => {
+    const imageKosValidationResult = KosImagePayloadSchema.validate(payload);
+
+    if (!imageKosValidationResult) {
+      throw new InvariantError(imageKosValidationResult.error.message);
+    }
+  },
+
+  validateRoomNumPayload: (payload) => {
+    const roomNumValidationResult = RoomNumSchema.validate(payload);
+
+    if (!roomNumValidationResult) {
+      throw new InvariantError(roomNumValidationResult.error.message);
     }
   },
 };

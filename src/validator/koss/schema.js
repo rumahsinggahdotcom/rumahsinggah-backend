@@ -1,10 +1,20 @@
 const Joi = require('joi');
 
-const KossPayloadSchema = Joi.object({
+const KosPayloadSchema = Joi.object({
   name: Joi.string().required(),
   address: Joi.string().required(),
-  rating: Joi.float(),
-  'content-type': Joi.string().valid('image/apng', 'image/afiv', 'image/gif', 'image/jpeg', 'image/png', 'image/webp').unknown(),
+  rating: Joi.number(),
 });
 
-module.exports = KossPayloadSchema;
+const KosImagePayloadSchema = Joi.object({
+  'content-type': Joi.string().valid('image/apng', 'image/afiv', 'image/gif', 'image/jpeg', 'image/png', 'image/webp'),
+}).unknown();
+
+const RoomNumSchema = Joi.object({
+  number: Joi.number().integer().options({ convert: false }).required(),
+  status: Joi.string().required(),
+});
+
+module.exports = {
+  KosPayloadSchema, KosImagePayloadSchema, RoomNumSchema,
+};

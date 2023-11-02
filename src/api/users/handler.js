@@ -35,6 +35,21 @@ class UsersHandler {
     response.code(201);
     return response;
   }
+
+  async getUsersByKosIdHandler(request, h) {
+    const { kosId } = request.params;
+    const users = await this._service.getUsersByKosId(kosId);
+
+    const response = h.response({
+      status: 'success',
+      data: {
+        users,
+      },
+    });
+
+    response.code(200);
+    return response;
+  }
 }
 
 module.exports = UsersHandler;
