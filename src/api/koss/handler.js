@@ -19,14 +19,12 @@ class KossHandler {
 
     await this._validator.validateKosPayload({ ownerId, name, address });
     const kosId = await this._kossService.addKos({ ownerId, name, address });
-
-    if (images) {
+    if (images.length > 1) {
       await Promise.all(images.map(async (image) => {
-        await this._validator.validateImageKosPayload(image.hapi.headers);
-        const filename = await this._storageService.writeFile(image, image.hapi);
-        const url = `http://${process.env.HOST}:${process.env.PORT}/file/image/${filename}`;
-        await this._kossService.addImageKos(url, kosId);
+        await this.addImage(kosId, image);
       }));
+    } else {
+      await this.addImage(kosId, images);
     }
 
     const response = h.response({
@@ -39,6 +37,13 @@ class KossHandler {
 
     response.code(201);
     return response;
+  }
+
+  async addImage(kosId, image) {
+    await this._validator.validateImageKosPayload(image.hapi.headers);
+    const filename = await this._storageService.writeFile(image, image.hapi);
+    const url = `http://${process.env.HOST}:${process.env.PORT}/file/image/${filename}`;
+    await this._kossService.addImageKos(kosId, url);
   }
 
   async getKossHandler(request, h) {
@@ -71,11 +76,11 @@ class KossHandler {
   }
 
   async putKosByIdHandler(request, h) {
-    await this._validator.validateKosPayload(request.payload);
-
+    const { name, address } = request.payload;
     const { id } = request.params;
-
-    await this._kossService.editKosById(id, request.payload);
+    await this._validator.validateKosPayload({ name, address });
+    await this._kossService.editKosById(id, { name, address });
+    // if (images)
 
     const response = h.response({
       status: 'success',

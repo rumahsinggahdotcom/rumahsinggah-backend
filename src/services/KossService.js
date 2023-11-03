@@ -14,7 +14,6 @@ class KossService {
     name,
     address,
   }) {
-    console.log(ownerId, name, address);
     const id = `koss-${nanoid(16)}`;
     const query = {
       text: 'INSERT INTO koss values($1, $2, $3, $4, $5) RETURNING id',
@@ -30,8 +29,8 @@ class KossService {
     return rows[0].id;
   }
 
-  async addImageKos(url, kosId) {
-    const id = `image_koss-${nanoid(16)}`;
+  async addImageKos(kosId, url) {
+    const id = `img_kos-${nanoid(16)}`;
 
     const query = {
       text: 'INSERT INTO image_koss values($1, $2, $3) RETURNING id',
@@ -95,13 +94,13 @@ class KossService {
     return kos;
   }
 
-  async editKosById(kossId, {
+  async editKosById(kosId, {
     name,
     address,
   }) {
     const query = {
       text: 'UPDATE koss SET name = $2, address = $3 WHERE id = $1',
-      values: [kossId, name, address],
+      values: [kosId, name, address],
     };
 
     const { rows } = await this._pool.query(query);
@@ -111,6 +110,19 @@ class KossService {
     }
 
     return rows[0].id;
+  }
+
+  async delImageKosByKosId(kosId) {
+    const delImgQuery = {
+      text: 'DELETE FROM image_koss where kos_id = $1 RETURNING id',
+      values: [kosId],
+    };
+
+    const { rows } = await this._pool.query(delImgQuery);
+
+    if (!rows.length) {
+      throw new NotFoundError('Image gagal dihapus. Id tidak ditemukan');
+    }
   }
 }
 
