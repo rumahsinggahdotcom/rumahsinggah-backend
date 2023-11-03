@@ -31,6 +31,7 @@ class UsersService {
     if (!result.rows.length) {
       throw new InvariantError('User failed to add');
     }
+    console.log('testing github');
     return result.rows[0].id;
   }
 
