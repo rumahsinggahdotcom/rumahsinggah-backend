@@ -1,49 +1,76 @@
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
+const path = require('path');
 const InvariantError = require('../exceptions/InvariantError');
 const NotFoundError = require('../exceptions/NotFoundError');
 const { mapDBToModel } = require('../utils');
+const StorageService = require('./StorageService');
 
 class KossService {
   constructor() {
     this._pool = new Pool();
+    this._storageService = new StorageService(path.resolve(__dirname, '../api/koss/file'));
   }
 
   async addKos({
     ownerId,
     name,
     address,
-  }) {
+  }, images) {
+    // const connection = await this._pool.getConnection();
+    let result;
     const id = `koss-${nanoid(16)}`;
-    const query = {
-      text: 'INSERT INTO koss values($1, $2, $3, $4, $5) RETURNING id',
-      values: [id, ownerId, name, address, null],
-    };
+    try {
+      await this._pool.query('BEGIN');
+      const query = {
+        text: 'INSERT INTO koss values($1, $2, $3, $4, $5) RETURNING id',
+        values: [id, ownerId, name, address, null],
+      };
+      result = await this._pool.query(query);
+      if (images.length > 1) {
+        await Promise.all(images.map(async (image) => {
+          const filename = +new Date() + image.hapi.filename;
+          console.log('filename 1:', filename);
+          await this.addImageKos('result.rows[0].id', filename, image);
+          console.log('filename 2:', filename);
+          await this._pool.query('COMMIT');
+          await this._storageService.writeFile(image, filename);
+        }));
+      } else {
+        const filename = +new Date() + images.hapi.filename;
+        await this.addImageKos(result.rows[0].id, filename);
+        await this._pool.query('COMMIT');
+        await this._storageService.writeFile(images, filename);
+      }
+    } catch (error) {
+      await this._pool.query('ROLLBACK');
+      throw new InvariantError(error.detail);
+    }
 
-    const { rows } = await this._pool.query(query);
-
-    if (!rows[0].id) {
+    if (!result.rows[0].id) {
       throw new InvariantError('Kos Gagal Ditambahkan.');
     }
 
-    return rows[0].id;
+    return result.rows[0].id;
   }
 
-  async addImageKos(kosId, url) {
+  async addImageKos(kosId, filename) {
     const id = `img_kos-${nanoid(16)}`;
-
+    const url = `http://${process.env.HOST}:${process.env.PORT}/file/image/${filename}`;
+    console.log('id 1:', id);
+    console.log('kosId 1:', kosId);
     const query = {
       text: 'INSERT INTO image_koss values($1, $2, $3) RETURNING id',
       values: [id, kosId, url],
     };
 
     const { rows } = await this._pool.query(query);
-
+    console.log('id 2:', id);
+    console.log('kosId 2:', kosId);
+    console.log(rows);
     if (!rows[0].id) {
       throw new InvariantError('Image Kos Gagal Ditambahkan.');
     }
-
-    return rows[0].id;
   }
 
   async getKoss() {

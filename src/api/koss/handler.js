@@ -18,14 +18,16 @@ class KossHandler {
     } = request.payload;
 
     await this._validator.validateKosPayload({ ownerId, name, address });
-    const kosId = await this._kossService.addKos({ ownerId, name, address });
     if (images.length > 1) {
       await Promise.all(images.map(async (image) => {
-        await this.addImage(kosId, image);
+        // await this.addImage(kosId, image);
+        await this._validator.validateImageKosPayload(image.hapi.headers);
       }));
     } else {
-      await this.addImage(kosId, images);
+      // await this.addImage(kosId, images);
+      await this._validator.validateImageKosPayload(images.hapi.headers);
     }
+    const kosId = await this._kossService.addKos({ ownerId, name, address }, images);
 
     const response = h.response({
       status: 'success',
@@ -39,12 +41,11 @@ class KossHandler {
     return response;
   }
 
-  async addImage(kosId, image) {
-    await this._validator.validateImageKosPayload(image.hapi.headers);
-    const filename = await this._storageService.writeFile(image, image.hapi);
-    const url = `http://${process.env.HOST}:${process.env.PORT}/file/image/${filename}`;
-    await this._kossService.addImageKos(kosId, url);
-  }
+  // async addImage(kosId, image) {
+  // const filename = await this._storageService.writeFile(image, image.hapi);
+  // const url = `http://${process.env.HOST}:${process.env.PORT}/file/image/${filename}`;
+  //   await this._kossService.addImageKos(kosId, url);
+  // }
 
   async getKossHandler(request, h) {
     const koss = await this._kossService.getKoss();
