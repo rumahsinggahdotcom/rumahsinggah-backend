@@ -12,7 +12,7 @@ exports.up = (pgm) => {
       type: 'VARCHAR',
       notNull: true,
     },
-    images: {
+    image: {
       type: 'VARCHAR',
       notNull: false,
     },
