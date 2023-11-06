@@ -9,25 +9,31 @@ class KossHandler {
   }
 
   async postKosHandler(request, h) {
-    console.log(request.payload);
-    const { images } = request.payload;
     const {
       ownerId,
       name,
       address,
     } = request.payload;
 
-    await this._validator.validateKosPayload({ ownerId, name, address });
+    let arrayImgs = [];
+    const { images } = request.payload;
     if (images.length > 1) {
-      await Promise.all(images.map(async (image) => {
-        // await this.addImage(kosId, image);
+      arrayImgs = images;
+    } else {
+      arrayImgs.push(images);
+    }
+
+    // Validate Kos Payload
+    await this._validator.validateKosPayload({ ownerId, name, address });
+
+    // Validate Image Kos Payload
+    if (arrayImgs) {
+      await Promise.all(arrayImgs.map(async (image) => {
         await this._validator.validateImageKosPayload(image.hapi.headers);
       }));
-    } else {
-      // await this.addImage(kosId, images);
-      await this._validator.validateImageKosPayload(images.hapi.headers);
     }
-    const kosId = await this._kossService.addKos({ ownerId, name, address }, images);
+
+    const kosId = await this._kossService.addKos({ ownerId, name, address }, arrayImgs);
 
     const response = h.response({
       status: 'success',
@@ -40,12 +46,6 @@ class KossHandler {
     response.code(201);
     return response;
   }
-
-  // async addImage(kosId, image) {
-  // const filename = await this._storageService.writeFile(image, image.hapi);
-  // const url = `http://${process.env.HOST}:${process.env.PORT}/file/image/${filename}`;
-  //   await this._kossService.addImageKos(kosId, url);
-  // }
 
   async getKossHandler(request, h) {
     const koss = await this._kossService.getKoss();
@@ -77,11 +77,28 @@ class KossHandler {
   }
 
   async putKosByIdHandler(request, h) {
-    const { name, address } = request.payload;
     const { id } = request.params;
+    const { name, address } = request.payload;
+
+    const { images } = request.payload;
+    let arrayImgs = [];
+    if (images.length > 1) {
+      arrayImgs = images;
+    } else {
+      arrayImgs.push(images);
+    }
+
+    // Validate Kos Payload
     await this._validator.validateKosPayload({ name, address });
-    await this._kossService.editKosById(id, { name, address });
-    // if (images)
+
+    // Validate Image Kos Payload
+    if (arrayImgs) {
+      await Promise.all(arrayImgs.map(async (image) => {
+        await this._validator.validateImageKosPayload(image.hapi.headers);
+      }));
+    }
+
+    await this._kossService.editKosById(id, { name, address }, arrayImgs);
 
     const response = h.response({
       status: 'success',
