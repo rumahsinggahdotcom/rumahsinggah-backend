@@ -26,6 +26,14 @@ const kossRoutes = (handler) => [
     method: 'PUT',
     path: '/koss/{id}',
     handler: handler.putKosByIdHandler,
+    options: {
+      payload: {
+        allow: 'multipart/form-data',
+        multipart: true,
+        output: 'stream',
+        maxBytes: 1024000, // 500KB
+      },
+    },
   },
 ];
 
