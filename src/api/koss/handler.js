@@ -1,4 +1,5 @@
 const autobind = require('auto-bind');
+const { assignImageToArray } = require('../../utils');
 
 class KossHandler {
   constructor(kossService, storageService, validator) {
@@ -15,13 +16,14 @@ class KossHandler {
       address,
     } = request.payload;
 
-    let arrayImgs = [];
     const { images } = request.payload;
-    if (images.length > 1) {
-      arrayImgs = images;
-    } else {
-      arrayImgs.push(images);
-    }
+    const arrayImgs = assignImageToArray(images);
+    // let arrayImgs = [];
+    // if (images.length > 1) {
+    //   arrayImgs = images;
+    // } else {
+    //   arrayImgs.push(images);
+    // }
 
     // Validate Kos Payload
     await this._validator.validateKosPayload({ ownerId, name, address });
@@ -81,12 +83,13 @@ class KossHandler {
     const { name, address } = request.payload;
 
     const { images } = request.payload;
-    let arrayImgs = [];
-    if (images.length > 1) {
-      arrayImgs = images;
-    } else {
-      arrayImgs.push(images);
-    }
+    const arrayImgs = assignImageToArray(images);
+    // let arrayImgs = [];
+    // if (images.length > 1) {
+    //   arrayImgs = images;
+    // } else {
+    //   arrayImgs.push(images);
+    // }
 
     // Validate Kos Payload
     await this._validator.validateKosPayload({ name, address });

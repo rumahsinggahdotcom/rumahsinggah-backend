@@ -14,11 +14,11 @@ class RoomService {
     price,
     quantity,
   }) {
-    const roomId = `room_koss-${nanoid(16)}`;
+    const id = `room_koss-${nanoid(16)}`;
 
     const query = {
       text: 'INSERT INTO room values ($1, $2, $3, $4, $5, $6) RETURNING id',
-      values: [roomId, type, maxPeople, price, kosId, quantity],
+      values: [id, type, maxPeople, price, kosId, quantity],
     };
 
     const { rows } = await this._pool.query(query);
@@ -60,7 +60,7 @@ class RoomService {
     return rows;
   }
 
-  async editRoomById(roomId, {
+  async editRoomById(id, {
     type,
     maxPeople,
     price,
@@ -68,7 +68,7 @@ class RoomService {
   }) {
     const query = {
       text: 'UPDATE room SET type = $2, max_people = $3, price = $4, quantity = $5 WHERE id = $1 RETURNING id',
-      values: [roomId, type, maxPeople, price, quantity],
+      values: [id, type, maxPeople, price, quantity],
     };
 
     const { rows } = await this._pool.query(query);

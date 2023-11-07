@@ -27,6 +27,16 @@ const mapDBToModel = ({
   images,
 });
 
-// const map
+/* assign images payload to array */
+const assignImageToArray = (images) => {
+  let arrayImgs = [];
+  if (images.length > 1) {
+    arrayImgs = images;
+  } else {
+    arrayImgs.push(images);
+  }
 
-module.exports = { mapDBToModel };
+  return arrayImgs;
+};
+
+module.exports = { mapDBToModel, assignImageToArray };
