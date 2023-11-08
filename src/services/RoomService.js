@@ -8,10 +8,11 @@ class RoomService {
     this._pool = new Pool();
   }
 
-  async addRoom(kosId, {
+  async addRoom({
     type,
     maxPeople,
     price,
+    kosId,
     quantity,
   }) {
     const id = `room_koss-${nanoid(16)}`;
@@ -32,7 +33,7 @@ class RoomService {
 
   async getRoomsByKosId(kosId) {
     const query = {
-      text: 'SELECT * FROM room where kos_id = $1',
+      text: 'SELECT * FROM room WHERE kos_id = $1',
       values: [kosId],
     };
 
@@ -47,7 +48,7 @@ class RoomService {
 
   async getRoomById(id) {
     const query = {
-      text: 'SELECT * FROM room where id = $1',
+      text: 'SELECT * FROM room WHERE id = $1',
       values: [id],
     };
 

@@ -6,7 +6,7 @@ const routes = (handler) => [
   },
   {
     method: 'GET',
-    path: '/koss/{id}/rooms',
+    path: '/koss/{kosId}/rooms',
     handler: handler.getRoomsByKosIdHandler,
   },
   {
@@ -16,7 +16,7 @@ const routes = (handler) => [
   },
   {
     method: 'PUT',
-    path: '/koss/room/{id}',
+    path: '/koss/{kosId}/room/{id}',
     handler: handler.putRoomByIdHandler,
   },
 ];

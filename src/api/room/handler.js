@@ -8,6 +8,7 @@ class RoomHandler {
   }
 
   async postRoomHandler(request, h) {
+    // const { kosId } = request.params;
     await this._validator.validateRoomPayload(request.payload);
     const roomId = await this._service.addRoom(request.payload);
 
@@ -39,8 +40,10 @@ class RoomHandler {
   }
 
   async getRoomByIdHandler(request, h) {
-    console.log(request.params);
-    const room = await this._service.getRoomById();
+    // console.log(request.params);
+    // console.log(request.params);
+    const { roomId } = request.params;
+    const room = await this._service.getRoomById(roomId);
 
     const response = h.response({
       status: 'success',
