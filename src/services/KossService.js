@@ -34,7 +34,6 @@ class KossService {
 
       if (arrayImgs) {
         await Promise.all(arrayImgs.map(async (image) => {
-          console.log(image);
           await this.writeAndCommitImageDatabase(kosId, image);
         }));
       }

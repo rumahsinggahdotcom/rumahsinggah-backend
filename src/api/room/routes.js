@@ -3,6 +3,14 @@ const routes = (handler) => [
     method: 'POST',
     path: '/koss/room',
     handler: handler.postRoomHandler,
+    options: {
+      payload: {
+        allow: 'multipart/form-data',
+        multipart: true,
+        output: 'stream',
+        maxBytes: 1024000,
+      },
+    },
   },
   {
     method: 'GET',

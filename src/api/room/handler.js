@@ -1,4 +1,5 @@
 const autoBind = require('auto-bind');
+const { assignImageToArray } = require('../../utils');
 
 class RoomHandler {
   constructor(service, validator) {
@@ -9,8 +10,16 @@ class RoomHandler {
 
   async postRoomHandler(request, h) {
     // const { kosId } = request.params;
+    const { images } = request.payload;
+    const arrayImgs = assignImageToArray(images);
+
     await this._validator.validateRoomPayload(request.payload);
-    const roomId = await this._service.addRoom(request.payload);
+
+    await Promise.all(arrayImgs.map(async (image) => {
+      this._validator.validateImageRoomPayload(image);
+    }));
+
+    const roomId = await this._service.addRoom(request.payload, arrayImgs);
 
     const response = h.response({
       status: 'success',

@@ -1,11 +1,14 @@
+const path = require('path');
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const InvariantError = require('../exceptions/InvariantError');
 const NotFoundError = require('../exceptions/NotFoundError');
+const StorageService = require('./StorageService');
 
 class RoomService {
   constructor() {
     this._pool = new Pool();
+    this._storageService = new StorageService(path.resolve(__dirname, '../api/room/file'));
   }
 
   async addRoom({
@@ -14,21 +17,75 @@ class RoomService {
     price,
     kosId,
     quantity,
-  }) {
-    const id = `room_koss-${nanoid(16)}`;
+  }, arrayImgs) {
+    const client = await this._pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('SET CONSTRAINTS ALL DEFERRED');
+      const id = `room-${nanoid(16)}`;
+
+      const query = {
+        text: 'INSERT INTO room values ($1, $2, $3, $4, $5, $6) RETURNING id',
+        values: [id, type, maxPeople, price, kosId, quantity],
+      };
+
+      const { rows } = await client.query(query);
+      const roomId = rows[0].id;
+
+      if (!roomId) {
+        throw new InvariantError('Room Kos Gagal Ditambahkan.');
+      }
+      // console.log(roomId);
+      if (arrayImgs) {
+        await Promise.all(arrayImgs.map(async (image) => {
+          const filename = +new Date() + image.hapi.filename;
+          await this.writeAndCommitImageDatabase(roomId, image, client);
+          await this._storageService.writeFile(image, filename);
+          // console.log('filename :', filename);
+          // await this.addImageRoom(roomId, filename);
+          // const idImg = `image_room-${nanoid(16)}`;
+          // console.log(idImg);
+          // const queryImg = {
+          //   text: 'INSERT INTO image_room values($1, $2, $3) RETURNING id',
+          //   values: [idImg, roomId, filename],
+          // };
+
+          // // const { rows } = await client.query(query);
+          // const resultImg = await client.query(queryImg);
+          // if (!resultImg.rows[0].id) {
+          //   throw new InvariantError('Gagal menambahkan image room');
+          // }
+        }));
+      }
+
+      await client.query('COMMIT');
+      return roomId;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw new InvariantError(error.detail);
+    }
+  }
+
+  async writeAndCommitImageDatabase(roomId, image, client) {
+    const filename = +new Date() + image.hapi.filename;
+    await this.addImageRoom(roomId, filename, client);
+    await this._storageService.writeFile(image, filename);
+  }
+
+  async addImageRoom(roomId, filename, client) {
+    const id = `image_room-${nanoid(16)}`;
+    console.log(id);
 
     const query = {
-      text: 'INSERT INTO room values ($1, $2, $3, $4, $5, $6) RETURNING id',
-      values: [id, type, maxPeople, price, kosId, quantity],
+      text: 'INSERT INTO image_room values($1, $2, $3) RETURNING id',
+      values: [id, roomId, filename],
     };
 
-    const { rows } = await this._pool.query(query);
-
+    const { rows } = await client.query(query);
+    // const { rows } = await this._pool.query(query);
     if (!rows[0].id) {
-      throw new InvariantError('Room Kos Gagal Ditambahkan.');
+      throw new InvariantError('Gagal ienambahkan image room');
     }
-
-    return rows[0].id;
   }
 
   async getRoomsByKosId(kosId) {

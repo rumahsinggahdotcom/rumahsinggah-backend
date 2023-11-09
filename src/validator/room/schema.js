@@ -7,4 +7,8 @@ const RoomPayloadSchema = Joi.object({
   quantity: Joi.number().integer().options({ convert: false }).required(),
 });
 
-module.exports = { RoomPayloadSchema };
+const ImageRoomPayloadSchema = Joi.object({
+  'content-type': Joi.string().valid('image/apng', 'image/afiv', 'image/gif', 'image/jpeg', 'image/png', 'image/webp'),
+}).unknown();
+
+module.exports = { RoomPayloadSchema, ImageRoomPayloadSchema };
