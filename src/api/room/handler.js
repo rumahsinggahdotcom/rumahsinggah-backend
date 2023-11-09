@@ -67,7 +67,9 @@ class RoomHandler {
 
   async putRoomByIdHandler(request, h) {
     const { id } = request.params;
-    const roomId = await this._service.editRoomById(id, request.payload);
+    const { images } = request.payload;
+    const arrayImgs = assignImageToArray(images);
+    const roomId = await this._service.editRoomById(id, request.payload, arrayImgs);
 
     const response = h.response({
       status: 'success',

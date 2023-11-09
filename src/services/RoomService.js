@@ -19,6 +19,7 @@ class RoomService {
     quantity,
   }, arrayImgs) {
     const client = await this._pool.connect();
+    console.log('client dari addroom:', client);
     try {
       await client.query('BEGIN');
       await client.query('SET CONSTRAINTS ALL DEFERRED');
@@ -39,22 +40,17 @@ class RoomService {
       if (arrayImgs) {
         await Promise.all(arrayImgs.map(async (image) => {
           const filename = +new Date() + image.hapi.filename;
-          await this.writeAndCommitImageDatabase(roomId, image, client);
-          await this._storageService.writeFile(image, filename);
-          // console.log('filename :', filename);
-          // await this.addImageRoom(roomId, filename);
-          // const idImg = `image_room-${nanoid(16)}`;
-          // console.log(idImg);
-          // const queryImg = {
-          //   text: 'INSERT INTO image_room values($1, $2, $3) RETURNING id',
-          //   values: [idImg, roomId, filename],
-          // };
+          const idImg = `image_room-${nanoid(16)}`;
+          const queryImg = {
+            text: 'INSERT INTO image_room values($1, $2, $3) RETURNING id',
+            values: [idImg, 'roomId', filename],
+          };
+          const resultImg = await client.query(queryImg);
+          if (!resultImg.rows[0].id) {
+            throw new InvariantError('Gagal menambahkan image room');
+          }
 
-          // // const { rows } = await client.query(query);
-          // const resultImg = await client.query(queryImg);
-          // if (!resultImg.rows[0].id) {
-          //   throw new InvariantError('Gagal menambahkan image room');
-          // }
+          await this._storageService.writeFile(image, filename);
         }));
       }
 
@@ -63,6 +59,8 @@ class RoomService {
     } catch (error) {
       await client.query('ROLLBACK');
       throw new InvariantError(error.detail);
+    } finally {
+      client.release();
     }
   }
 
@@ -72,21 +70,22 @@ class RoomService {
     await this._storageService.writeFile(image, filename);
   }
 
-  async addImageRoom(roomId, filename, client) {
-    const id = `image_room-${nanoid(16)}`;
-    console.log(id);
+  // async addImageRoom(roomId, filename, client) {
+  //   const id = `image_room-${nanoid(16)}`;
+  //   console.log(id);
+  //   console.log('client dari addimageroom:', client);
 
-    const query = {
-      text: 'INSERT INTO image_room values($1, $2, $3) RETURNING id',
-      values: [id, roomId, filename],
-    };
+  //   const query = {
+  //     text: 'INSERT INTO image_room values($1, $2, $3) RETURNING id',
+  //     values: [id, roomId, filename],
+  //   };
 
-    const { rows } = await client.query(query);
-    // const { rows } = await this._pool.query(query);
-    if (!rows[0].id) {
-      throw new InvariantError('Gagal ienambahkan image room');
-    }
-  }
+  //   // const { rows } = await client.query(query);
+  //   const { rows } = await this._pool.query(query);
+  //   if (!rows[0].id) {
+  //     throw new InvariantError('Gagal ienambahkan image room');
+  //   }
+  // }
 
   async getRoomsByKosId(kosId) {
     const query = {
@@ -123,19 +122,64 @@ class RoomService {
     maxPeople,
     price,
     quantity,
-  }) {
-    const query = {
-      text: 'UPDATE room SET type = $2, max_people = $3, price = $4, quantity = $5 WHERE id = $1 RETURNING id',
-      values: [id, type, maxPeople, price, quantity],
-    };
+  }, arrayImgs) {
+    const client = await this._pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('SET CONSTRAINTS ALL DEFERRED');
+      const query = {
+        text: 'UPDATE room SET type = $2, max_people = $3, price = $4, quantity = $5 WHERE id = $1 RETURNING id',
+        values: [id, type, maxPeople, price, quantity],
+      };
 
-    const { rows } = await this._pool.query(query);
+      const { rows } = await client.query(query);
+      const roomId = rows[0].id;
 
-    if (!rows[0].id) {
-      throw new InvariantError('Gagal Memperbarui Room. Id Tidak Ditemukan.');
+      if (!roomId) {
+        throw new InvariantError('Gagal Memperbarui Room. Id Tidak Ditemukan.');
+      }
+
+      const roomImgsQuery = {
+        text: 'SELECT image FROM image_room WHERE room_id = $1',
+        values: [roomId],
+      };
+      const resultRoomImgs = await client.query(roomImgsQuery);
+      const roomImgs = resultRoomImgs.rows;
+
+      if (roomImgs) {
+        await Promise.all(roomImgs.map(async (imgFilename) => {
+          await this._storageService.deleteFile(imgFilename.image);
+        }));
+        const delImgQuery = {
+          text: 'DELETE FROM image_room WHERE room_id = $1',
+          values: [roomId],
+        };
+        await client.query(delImgQuery);
+      }
+
+      if (arrayImgs) {
+        await Promise.all(arrayImgs.map(async (image) => {
+          const filename = +new Date() + image.hapi.filename;
+          const idImg = `image_room-${nanoid(16)}`;
+          const queryImg = {
+            text: 'INSERT INTO image_room values($1, $2, $3) RETURNING id',
+            values: [idImg, 'roomId', filename],
+          };
+          const resultImg = await client.query(queryImg);
+          if (!resultImg.rows[0].id) {
+            throw new InvariantError('Gagal menambahkan image room');
+          }
+
+          await this._storageService.writeFile(image, filename);
+        }));
+      }
+      await client.query('COMMIT');
+
+      return roomId;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw new InvariantError(error.detail);
     }
-
-    return rows[0].id;
   }
 }
 module.exports = RoomService;

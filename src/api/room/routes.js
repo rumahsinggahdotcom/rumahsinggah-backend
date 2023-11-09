@@ -26,6 +26,14 @@ const routes = (handler) => [
     method: 'PUT',
     path: '/koss/{kosId}/room/{id}',
     handler: handler.putRoomByIdHandler,
+    options: {
+      payload: {
+        allow: 'multipart/form-data',
+        multipart: true,
+        output: 'stream',
+        maxBytes: 1024000,
+      },
+    },
   },
 ];
 
