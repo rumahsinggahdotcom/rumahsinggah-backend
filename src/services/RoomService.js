@@ -38,9 +38,9 @@ class RoomService {
       // console.log(roomId);
       if (arrayImgs) {
         await Promise.all(arrayImgs.map(async (image) => {
-          const filename = +new Date() + image.hapi.filename;
+          // const filename = +new Date() + image.hapi.filename;
           await this.writeAndCommitImageDatabase(roomId, image, client);
-          await this._storageService.writeFile(image, filename);
+          // await this._storageService.writeFile(image, filename);
           // console.log('filename :', filename);
           // await this.addImageRoom(roomId, filename);
           // const idImg = `image_room-${nanoid(16)}`;
@@ -72,6 +72,7 @@ class RoomService {
     await this._storageService.writeFile(image, filename);
   }
 
+  // eslint-disable-next-line class-methods-use-this
   async addImageRoom(roomId, filename, client) {
     const id = `image_room-${nanoid(16)}`;
     console.log(id);
@@ -86,6 +87,8 @@ class RoomService {
     if (!rows[0].id) {
       throw new InvariantError('Gagal ienambahkan image room');
     }
+    console.log('ini id di addImageRoom', rows[0].id);
+    return rows[0].id;
   }
 
   async getRoomsByKosId(kosId) {
