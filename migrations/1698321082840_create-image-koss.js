@@ -18,7 +18,7 @@ exports.up = (pgm) => {
     },
   });
 
-  pgm.addConstraint('image_koss', 'fk_image_koss.kos_id_koss.id', 'FOREIGN KEY (kos_id) REFERENCES koss(id) ON DELETE CASCADE');
+  pgm.addConstraint('image_koss', 'fk_image_koss.kos_id_koss.id', 'FOREIGN KEY (kos_id) REFERENCES koss(id) ON DELETE CASCADE ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED');
 };
 
 exports.down = (pgm) => {
