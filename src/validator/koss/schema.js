@@ -3,6 +3,7 @@ const Joi = require('joi');
 const KosPayloadSchema = Joi.object({
   name: Joi.string().required(),
   address: Joi.string().required(),
+  description: Joi.string().required(),
   rating: Joi.number(),
 });
 

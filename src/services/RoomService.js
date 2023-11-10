@@ -25,7 +25,7 @@ class RoomService {
       const id = `room-${nanoid(16)}`;
       console.log('1');
       const query = {
-        text: 'INSERT INTO room values ($1, $2, $3, $4, $5, $6) RETURNING id, type',
+        text: 'INSERT INTO rooms values ($1, $2, $3, $4, $5, $6) RETURNING id, type',
         values: [id, type, maxPeople, price, kosId, quantity],
       };
       const { rows } = await client.query(query);
@@ -77,13 +77,13 @@ class RoomService {
     const id = `image_room-${nanoid(16)}`;
 
     const query = {
-      text: 'INSERT INTO image_room values($1, $2, $3) RETURNING id',
+      text: 'INSERT INTO image_rooms values($1, $2, $3) RETURNING id',
       values: [id, roomId, filename],
     };
     const { rows } = await client.query(query);
     // const { rows } = await this._pool.query(query);
     if (!rows[0].id) {
-      throw new InvariantError('Gagal ienambahkan image room');
+      throw new InvariantError('Gagal menambahkan image room');
     }
     // console.log('ini id di addImageRoom', rows[0].id);
     // return rows[0].id;
@@ -91,7 +91,7 @@ class RoomService {
 
   async getRoomsByKosId(kosId) {
     const query = {
-      text: 'SELECT * FROM room WHERE kos_id = $1',
+      text: 'SELECT * FROM rooms WHERE kos_id = $1',
       values: [kosId],
     };
 
@@ -106,7 +106,7 @@ class RoomService {
 
   async getRoomById(id) {
     const query = {
-      text: 'SELECT * FROM room WHERE id = $1',
+      text: 'SELECT * FROM rooms WHERE id = $1',
       values: [id],
     };
 
@@ -130,7 +130,7 @@ class RoomService {
       await client.query('BEGIN');
       await client.query('SET CONSTRAINTS ALL DEFERRED');
       const query = {
-        text: 'UPDATE room SET type = $2, max_people = $3, price = $4, quantity = $5 WHERE id = $1 RETURNING id, type, kos_id',
+        text: 'UPDATE rooms SET type = $2, max_people = $3, price = $4, quantity = $5 WHERE id = $1 RETURNING id, type, kos_id',
         values: [id, type, maxPeople, price, quantity],
       };
 
@@ -157,7 +157,7 @@ class RoomService {
       }
 
       const roomImgsQuery = {
-        text: 'SELECT image FROM image_room WHERE room_id = $1',
+        text: 'SELECT image FROM image_rooms WHERE room_id = $1',
         values: [roomId],
       };
       const resultRoomImgs = await client.query(roomImgsQuery);
@@ -166,7 +166,7 @@ class RoomService {
 
       if (roomImgs) {
         const delImgQuery = {
-          text: 'DELETE FROM image_room WHERE room_id = $1',
+          text: 'DELETE FROM image_rooms WHERE room_id = $1',
           values: [roomId],
         };
         await client.query(delImgQuery);

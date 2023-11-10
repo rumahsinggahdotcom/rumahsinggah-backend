@@ -14,6 +14,7 @@ class KossHandler {
       ownerId,
       name,
       address,
+      description,
     } = request.payload;
 
     const { images } = request.payload;
@@ -26,7 +27,12 @@ class KossHandler {
     // }
 
     // Validate Kos Payload
-    await this._validator.validateKosPayload({ ownerId, name, address });
+    await this._validator.validateKosPayload({
+      ownerId,
+      name,
+      address,
+      description,
+    });
 
     // Validate Image Kos Payload
     if (arrayImgs) {
@@ -35,7 +41,12 @@ class KossHandler {
       }));
     }
 
-    const kosId = await this._kossService.addKos({ ownerId, name, address }, arrayImgs);
+    const kosId = await this._kossService.addKos({
+      ownerId,
+      name,
+      address,
+      description,
+    }, arrayImgs);
 
     const response = h.response({
       status: 'success',
@@ -80,19 +91,13 @@ class KossHandler {
 
   async putKosByIdHandler(request, h) {
     const { id } = request.params;
-    const { name, address } = request.payload;
+    const { name, address, description } = request.payload;
 
     const { images } = request.payload;
     const arrayImgs = assignImageToArray(images);
-    // let arrayImgs = [];
-    // if (images.length > 1) {
-    //   arrayImgs = images;
-    // } else {
-    //   arrayImgs.push(images);
-    // }
 
     // Validate Kos Payload
-    await this._validator.validateKosPayload({ name, address });
+    await this._validator.validateKosPayload({ name, address, description });
 
     // Validate Image Kos Payload
     if (arrayImgs) {
@@ -101,7 +106,7 @@ class KossHandler {
       }));
     }
 
-    await this._kossService.editKosById(id, { name, address }, arrayImgs);
+    await this._kossService.editKosById(id, { name, address, description }, arrayImgs);
 
     const response = h.response({
       status: 'success',
