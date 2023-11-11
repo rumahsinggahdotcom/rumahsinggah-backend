@@ -19,12 +19,6 @@ class KossHandler {
 
     const { images } = request.payload;
     const arrayImgs = assignImageToArray(images);
-    // let arrayImgs = [];
-    // if (images.length > 1) {
-    //   arrayImgs = images;
-    // } else {
-    //   arrayImgs.push(images);
-    // }
 
     // Validate Kos Payload
     await this._validator.validateKosPayload({
@@ -53,6 +47,34 @@ class KossHandler {
       message: 'Kos Berhasil Ditambahkan',
       data: {
         kosId,
+      },
+    });
+
+    response.code(201);
+    return response;
+  }
+
+  async postKosImagesHandler(request, h) {
+    const { kosId } = request.payload;
+    const { images } = request.payload;
+    const arrayImgs = assignImageToArray(images);
+
+    await Promise.all(arrayImgs.map(async (image) => {
+      await this._validator.validateImageKosPayload(image);
+    }));
+
+    const imgsId = [];
+
+    await Promise.all(arrayImgs.map(async (image) => {
+      const imgId = await this._service.addImageKos(kosId, image);
+      imgsId.push(imgId);
+    }));
+
+    const response = h.response({
+      status: 'success',
+      message: 'Image Kos berhasil ditambahkan',
+      data: {
+        imgsId,
       },
     });
 
@@ -93,20 +115,9 @@ class KossHandler {
     const { id } = request.params;
     const { name, address, description } = request.payload;
 
-    const { images } = request.payload;
-    const arrayImgs = assignImageToArray(images);
-
     // Validate Kos Payload
     await this._validator.validateKosPayload({ name, address, description });
-
-    // Validate Image Kos Payload
-    if (arrayImgs) {
-      await Promise.all(arrayImgs.map(async (image) => {
-        await this._validator.validateImageKosPayload(image.hapi.headers);
-      }));
-    }
-
-    await this._kossService.editKosById(id, { name, address, description }, arrayImgs);
+    await this._kossService.editKosById(id, { name, address, description });
 
     const response = h.response({
       status: 'success',

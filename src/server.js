@@ -30,7 +30,7 @@ const init = async () => {
   const usersService = new UsersService();
   const ownersService = new OwnersService();
   const kossService = new KossService();
-  const storageService = new StorageService(path.resolve(__dirname, 'api/koss/file'));
+  const storageService = new StorageService(path.resolve(__dirname, 'api/file'));
   const roomService = new RoomService();
 
   const server = hapi.server({

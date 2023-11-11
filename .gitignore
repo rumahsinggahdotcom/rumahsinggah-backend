@@ -3,3 +3,4 @@ package-lock.json
 .env
 src/api/koss/file
 src/api/room/file
+src/api/file/koss

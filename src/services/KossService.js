@@ -9,7 +9,7 @@ const StorageService = require('./StorageService');
 class KossService {
   constructor() {
     this._pool = new Pool();
-    this._storageService = new StorageService(path.resolve(__dirname, '../api/koss/file'));
+    this._storageService = new StorageService(path.resolve(__dirname, '../api/file'));
   }
 
   async addKos({
@@ -29,6 +29,7 @@ class KossService {
         values: [id, ownerId, name, address, description, null],
       };
       const { rows } = await client.query(query);
+      console.log('1');
       if (!rows[0].id) {
         throw new InvariantError('Kos Gagal Ditambahkan.');
       }
@@ -37,37 +38,46 @@ class KossService {
       const kosName = rows[0].name;
 
       if (arrayImgs) {
+        console.log('2');
         await Promise.all(arrayImgs.map(async (image) => {
           await this.writeAndCommitImageDatabase(kosId, image, client, { kosOwnerId, kosName });
         }));
+        console.log('4');
       }
       await client.query('COMMIT');
 
       return rows[0].id;
     } catch (error) {
       await client.query('ROLLBACK');
-      throw new InvariantError(error.detail);
+      throw new InvariantError(error.message);
     }
   }
 
   async writeAndCommitImageDatabase(kosId, image, client, { kosOwnerId, kosName }) {
     // const filename = +new Date() + image.hapi.filename;
     const filename = `${kosOwnerId}_${kosName}_${image.hapi.filename}`;
-    await this.addImageKos(kosId, filename, client);
-    await this._storageService.writeFile(image, filename);
+    console.log(filename);
+    await this.addImageKos(kosId, filename, { pool: client });
+    // await this.addImageKos('kosId', filename, client);
+    await this._storageService.writeFile(image, filename, 'koss');
+    console.log('oi');
   }
 
   // eslint-disable-next-line class-methods-use-this
-  async addImageKos(kosId, filename, client) {
+  // async addImageKos(kosId, filename, client) {
+  async addImageKos(kosId, filename, { pool = this._pool } = {}) {
     const id = `img_kos-${nanoid(16)}`;
-
+    console.log(id);
+    console.log(kosId);
     const query = {
       text: 'INSERT INTO image_koss values($1, $2, $3) RETURNING id',
       values: [id, kosId, filename],
     };
 
-    // const { rows } = await this._pool.query(query);
-    const { rows } = await client.query(query);
+    const { rows } = await pool.query(query);
+    // console.log(pool);
+    // const { rows } = await client.query(query);
+    console.log(rows);
 
     if (!rows[0].id) {
       throw new InvariantError('Image Kos Gagal Ditambahkan.');
@@ -123,75 +133,30 @@ class KossService {
     return kos;
   }
 
-  async editKosById(kosId, {
+  async editKosById(id, {
     name,
     address,
     description,
-  }, arrayImgs) {
-    const client = await this._pool.connect();
-    try {
-      await client.query('BEGIN');
-      await client.query('SET CONSTRAINTS ALL DEFERRED');
-      console.log('1');
-      // Updating Koss
-      const editQuery = {
-        text: 'UPDATE koss SET name = $2, address = $3, description = $4 WHERE id = $1 RETURNING name, owner_id',
-        values: [kosId, name, address, description],
-      };
+  }) {
+    // const client = await this._pool.connect();
+    const query = {
+      text: 'UPDATE koss SET name = $2, address = $3, description = $4 WHERE id = $1 RETURNING id',
+      values: [id, name, address, description],
+    };
 
-      const resultEdit = await client.query(editQuery);
-
-      console.log('2');
-      if (!resultEdit.rows) {
-        throw new InvariantError('Gagal memperbarui Kos. Id tidak ditemukan.');
-      }
-
-      const kosOwnerId = resultEdit.rows[0].owner_id;
-      const kosName = resultEdit.rows[0].name;
-
-      // Select Images from kos_id in image_koss
-      const imagesQuery = {
-        text: 'SELECT image FROM image_koss where kos_id = $1',
-        values: [kosId],
-      };
-      const resultImgs = await client.query(imagesQuery);
-      console.log('3');
-      const kosImgs = resultImgs.rows;
-
-      // Delete File in Storage and image_koss table
-      if (kosImgs) {
-        console.log('4');
-        await this.delImageKosByKosId(kosId, client);
-        await Promise.all(kosImgs.map(async (imgFilename) => {
-          await this._storageService.deleteFile(imgFilename.image);
-        }));
-        console.log('5');
-      }
-
-      // Adding Image
-      if (arrayImgs) {
-        console.log('6');
-        await Promise.all(arrayImgs.map(async (image) => {
-          await this.writeAndCommitImageDatabase('kosId', image, client, { kosOwnerId, kosName });
-        }));
-        console.log('7');
-      }
-      await client.query('COMMIT');
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw new InvariantError(error.message);
+    const { rows } = await this._pool.query(query);
+    if (!rows[0].id) {
+      throw new InvariantError('Gagal memperbarui Kos. Id tidak ditemukan.');
     }
   }
 
-  // eslint-disable-next-line class-methods-use-this
-  async delImageKosByKosId(kosId, client) {
-    const delImgQuery = {
-      text: 'DELETE FROM image_koss where kos_id = $1 RETURNING id',
-      values: [kosId],
+  async delImageKosById(id) {
+    const query = {
+      text: 'DELETE FROM image_koss where id = $1 RETURNING id',
+      values: [id],
     };
 
-    const { rows } = await client.query(delImgQuery);
-    // console.log(!rows[0].length === true);
+    const { rows } = await this._pool.query(query);
     if (!rows[0].id) {
       throw new NotFoundError('Image gagal dihapus. Id tidak ditemukan');
     }

@@ -13,6 +13,19 @@ const kossRoutes = (handler) => [
     },
   },
   {
+    method: 'POST',
+    path: '/koss/images',
+    handler: handler.postKosImagesHandler,
+    options: {
+      payload: {
+        allow: 'multipart/form-data',
+        multipart: true,
+        output: 'stream',
+        maxBytes: 512000,
+      },
+    },
+  },
+  {
     method: 'GET',
     path: '/koss',
     handler: handler.getKossHandler,
