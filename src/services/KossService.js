@@ -25,24 +25,19 @@ class KossService {
       await client.query('BEGIN');
       await client.query('SET CONSTRAINTS ALL DEFERRED');
       const query = {
-        text: 'INSERT INTO koss values($1, $2, $3, $4, $5, $6) RETURNING id, name, owner_id',
+        text: 'INSERT INTO koss values($1, $2, $3, $4, $5, $6) RETURNING id',
         values: [id, ownerId, name, address, description, null],
       };
       const { rows } = await client.query(query);
-      console.log('1');
       if (!rows[0].id) {
         throw new InvariantError('Kos Gagal Ditambahkan.');
       }
       const kosId = rows[0].id;
-      const kosOwnerId = rows[0].owner_id;
-      const kosName = rows[0].name;
 
       if (arrayImgs) {
-        console.log('2');
         await Promise.all(arrayImgs.map(async (image) => {
-          await this.writeAndCommitImageDatabase(kosId, image, client, { kosOwnerId, kosName });
+          await this.storeImgToStorageDb(kosId, image, { client });
         }));
-        console.log('4');
       }
       await client.query('COMMIT');
 
@@ -53,35 +48,47 @@ class KossService {
     }
   }
 
-  async writeAndCommitImageDatabase(kosId, image, client, { kosOwnerId, kosName }) {
-    // const filename = +new Date() + image.hapi.filename;
-    const filename = `${kosOwnerId}_${kosName}_${image.hapi.filename}`;
-    console.log(filename);
-    await this.addImageKos(kosId, filename, { pool: client });
-    // await this.addImageKos('kosId', filename, client);
-    await this._storageService.writeFile(image, filename, 'koss');
-    console.log('oi');
+  async addImageKos(kosId, arrayImgs) {
+    const imgsId = [];
+    const client = await this._pool.connect();
+    try {
+      await client.query('BEGIN');
+      await Promise.all(arrayImgs.map(async (image) => {
+        const imgId = await this.storeImgToStorageDb(kosId, image, { client });
+        imgsId.push(imgId);
+      }));
+      await client.query('COMMIT');
+
+      return imgsId;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw new InvariantError(error.message);
+    }
   }
 
-  // eslint-disable-next-line class-methods-use-this
-  // async addImageKos(kosId, filename, client) {
-  async addImageKos(kosId, filename, { pool = this._pool } = {}) {
+  async storeImgToStorageDb(kosId, image, { client = this._pool } = {}) {
+    const kosQuery = {
+      text: 'SELECT owner_id, name FROM koss where id = $1',
+      values: [kosId],
+    };
+    const resultKos = await client.query(kosQuery);
+    const kosOwnerId = resultKos.rows[0].owner_id;
+    const kosName = resultKos.rows[0].name;
+    const filename = `${kosOwnerId}_${kosName}_${image.hapi.filename}`;
+
     const id = `img_kos-${nanoid(16)}`;
-    console.log(id);
-    console.log(kosId);
-    const query = {
+    const imgKosQuery = {
       text: 'INSERT INTO image_koss values($1, $2, $3) RETURNING id',
       values: [id, kosId, filename],
     };
 
-    const { rows } = await pool.query(query);
-    // console.log(pool);
-    // const { rows } = await client.query(query);
-    console.log(rows);
-
-    if (!rows[0].id) {
+    const resImgKos = await client.query(imgKosQuery);
+    if (!resImgKos.rows[0].id) {
       throw new InvariantError('Image Kos Gagal Ditambahkan.');
     }
+
+    await this._storageService.writeFile(image, filename, 'koss');
+    return resImgKos.rows[0].id;
   }
 
   async getKoss() {
@@ -138,7 +145,6 @@ class KossService {
     address,
     description,
   }) {
-    // const client = await this._pool.connect();
     const query = {
       text: 'UPDATE koss SET name = $2, address = $3, description = $4 WHERE id = $1 RETURNING id',
       values: [id, name, address, description],
@@ -152,14 +158,19 @@ class KossService {
 
   async delImageKosById(id) {
     const query = {
-      text: 'DELETE FROM image_koss where id = $1 RETURNING id',
+      text: 'DELETE FROM image_koss where id = $1 RETURNING id, image',
       values: [id],
     };
 
     const { rows } = await this._pool.query(query);
+    const imgId = rows[0].id;
+    const filename = rows[0].image;
+
     if (!rows[0].id) {
       throw new NotFoundError('Image gagal dihapus. Id tidak ditemukan');
     }
+
+    return { filename, imgId };
   }
 }
 

@@ -48,6 +48,11 @@ const kossRoutes = (handler) => [
       },
     },
   },
+  {
+    method: 'DELETE',
+    path: '/koss/images/{id}',
+    handler: handler.delImageKosByIdHandler,
+  },
 ];
 
 module.exports = kossRoutes;

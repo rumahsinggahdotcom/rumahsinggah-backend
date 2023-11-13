@@ -63,12 +63,7 @@ class KossHandler {
       await this._validator.validateImageKosPayload(image);
     }));
 
-    const imgsId = [];
-
-    await Promise.all(arrayImgs.map(async (image) => {
-      const imgId = await this._service.addImageKos(kosId, image);
-      imgsId.push(imgId);
-    }));
+    const imgsId = await this._kossService.addImageKos(kosId, arrayImgs);
 
     const response = h.response({
       status: 'success',
@@ -122,6 +117,25 @@ class KossHandler {
     const response = h.response({
       status: 'success',
       message: 'Kos Berhasil Diedit',
+    });
+
+    response.code(200);
+    return response;
+  }
+
+  async delImageKosByIdHandler(request, h) {
+    const { id } = request.params;
+
+    const { filename, imgId } = await this._kossService.delImageKosById(id);
+
+    await this._storageService.deleteFile(filename, 'koss');
+
+    const response = h.response({
+      status: 'success',
+      message: 'Image berhasil dihapus.',
+      data: {
+        imgId,
+      },
     });
 
     response.code(200);
