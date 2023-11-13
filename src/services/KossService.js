@@ -36,7 +36,7 @@ class KossService {
 
       if (arrayImgs) {
         await Promise.all(arrayImgs.map(async (image) => {
-          await this.storeImgToStorageDb(kosId, image, { client });
+          await this.storeImgKossToStorageDb(kosId, image, { client });
         }));
       }
       await client.query('COMMIT');
@@ -48,13 +48,13 @@ class KossService {
     }
   }
 
-  async addImageKos(kosId, arrayImgs) {
+  async addImageKos(roomId, arrayImgs) {
     const imgsId = [];
     const client = await this._pool.connect();
     try {
       await client.query('BEGIN');
       await Promise.all(arrayImgs.map(async (image) => {
-        const imgId = await this.storeImgToStorageDb(kosId, image, { client });
+        const imgId = await this.storeImgKossToStorageDb(roomId, image, { client });
         imgsId.push(imgId);
       }));
       await client.query('COMMIT');
@@ -66,7 +66,7 @@ class KossService {
     }
   }
 
-  async storeImgToStorageDb(kosId, image, { client = this._pool } = {}) {
+  async storeImgKossToStorageDb(kosId, image, { client = this._pool } = {}) {
     const kosQuery = {
       text: 'SELECT owner_id, name FROM koss where id = $1',
       values: [kosId],
@@ -163,14 +163,13 @@ class KossService {
     };
 
     const { rows } = await this._pool.query(query);
-    const imgId = rows[0].id;
     const filename = rows[0].image;
 
     if (!rows[0].id) {
       throw new NotFoundError('Image gagal dihapus. Id tidak ditemukan');
     }
 
-    return { filename, imgId };
+    return filename;
   }
 }
 

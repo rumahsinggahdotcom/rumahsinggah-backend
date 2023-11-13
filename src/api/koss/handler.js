@@ -55,8 +55,7 @@ class KossHandler {
   }
 
   async postKosImagesHandler(request, h) {
-    const { kosId } = request.payload;
-    const { images } = request.payload;
+    const { kosId, images } = request.payload;
     const arrayImgs = assignImageToArray(images);
 
     await Promise.all(arrayImgs.map(async (image) => {
@@ -126,16 +125,13 @@ class KossHandler {
   async delImageKosByIdHandler(request, h) {
     const { id } = request.params;
 
-    const { filename, imgId } = await this._kossService.delImageKosById(id);
+    const filename = await this._kossService.delImageKosById(id);
 
     await this._storageService.deleteFile(filename, 'koss');
 
     const response = h.response({
       status: 'success',
       message: 'Image berhasil dihapus.',
-      data: {
-        imgId,
-      },
     });
 
     response.code(200);
