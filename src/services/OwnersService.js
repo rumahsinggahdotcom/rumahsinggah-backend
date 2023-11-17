@@ -3,6 +3,7 @@ const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const InvariantError = require('../exceptions/InvariantError');
 const NotFoundError = require('../exceptions/NotFoundError');
+const AuthenticationError = require('../exceptions/AuthenticationError');
 const { mapDBToModel } = require('../utils');
 // const AuthenticationError = require('../exceptions/AuthenticationError');
 
@@ -127,7 +128,25 @@ class OwnersService {
     return match;
   }
 
-  
+  async verifyOwnersCredentials(username, password) {
+    const query = {
+      text: 'SELECT id, password FROM owners WHERE username = $1',
+      values: [username],
+    };
+    const result = await this._pool.query(query);
+
+    if (!result.rows.length) {
+      throw new AuthenticationError('Kredensial yang anda berikan salah.');
+    }
+    const { id, password: hashedPassword } = result.rows[0];
+    const match = await bcrypt.compare(password, hashedPassword);
+
+    if (!match) {
+      throw new AuthenticationError('Kredensial yang anda berikan salah.');
+    }
+
+    return id;
+  }
 }
 
 module.exports = OwnersService;
