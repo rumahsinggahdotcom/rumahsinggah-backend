@@ -56,7 +56,7 @@ class AuthenticationHandlers {
     return response;
   }
 
-  async deleteAuthHandler(request, h) {
+  async deleteOwnersAuthHandler(request, h) {
     const { refreshToken } = request.payload;
     await this._validator.validateDeleteAuthPayload(refreshToken);
 

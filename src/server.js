@@ -1,5 +1,6 @@
 require('dotenv').config();
 const hapi = require('@hapi/hapi');
+const Jwt = require('@hapi/jwt');
 const path = require('path');
 const ClientError = require('./exceptions/ClientError');
 
@@ -26,12 +27,19 @@ const RoomsValidator = require('./validator/room');
 // upload
 const StorageService = require('./services/StorageService');
 
+// Authentications
+const authApp = require('./api/authentications');
+const AuthenticationService = require('./services/AuthenticationsService');
+const AuthenticationsValidator = require('./validator/authentications');
+const TokenManager = require('./tokenize/TokenManager');
+
 const init = async () => {
   const usersService = new UsersService();
   const ownersService = new OwnersService();
   const kossService = new KossService();
   const storageService = new StorageService(path.resolve(__dirname, 'api/file'));
   const roomsService = new RoomsService();
+  const authService = new AuthenticationService();
 
   const server = hapi.server({
     port: process.env.PORT,
@@ -41,6 +49,28 @@ const init = async () => {
         origin: ['*'],
       },
     },
+  });
+
+  await server.register([
+    {
+      plugin: Jwt,
+    },
+  ]);
+
+  server.auth.strategy('kossapp_jwt', 'jwt', {
+    keys: process.env.ACCESS_TOKEN_KEY,
+    verify: {
+      aud: false,
+      iss: false,
+      sub: false,
+      maxAgeSec: process.env.ACCESS_TOKEN_AGE,
+    },
+    validate: (artifacts) => ({
+      isValid: true,
+      credentials: {
+        id: artifacts.decoded.payload.id,
+      },
+    }),
   });
 
   await server.register([
@@ -72,6 +102,16 @@ const init = async () => {
         roomsService,
         storageService,
         validator: RoomsValidator,
+      },
+    },
+    {
+      plugin: authApp,
+      options: {
+        authService,
+        usersService,
+        ownersService,
+        tokenManager: TokenManager,
+        validator: AuthenticationsValidator,
       },
     },
   ]);
