@@ -1,4 +1,3 @@
-require('dotenv').config();
 const hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
 const path = require('path');
@@ -33,6 +32,8 @@ const AuthenticationService = require('./services/AuthenticationsService');
 const AuthenticationsValidator = require('./validator/authentications');
 const TokenManager = require('./tokenize/TokenManager');
 
+require('dotenv').config();
+
 const init = async () => {
   const usersService = new UsersService();
   const ownersService = new OwnersService();
@@ -51,6 +52,7 @@ const init = async () => {
     },
   });
 
+  // registrasi plugin eksternal
   await server.register([
     {
       plugin: Jwt,

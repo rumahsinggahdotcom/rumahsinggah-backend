@@ -128,13 +128,14 @@ class OwnersService {
     return match;
   }
 
-  async verifyOwnersCredentials(username, password) {
+  async verifyOwnersCredentials({ username, password }) {
+    console.log(username, password);
     const query = {
       text: 'SELECT id, password FROM owners WHERE username = $1',
       values: [username],
     };
     const result = await this._pool.query(query);
-
+    // console.log(result);
     if (!result.rows.length) {
       throw new AuthenticationError('Kredensial yang anda berikan salah.');
     }
