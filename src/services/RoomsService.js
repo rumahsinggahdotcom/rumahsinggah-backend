@@ -6,9 +6,10 @@ const NotFoundError = require('../exceptions/NotFoundError');
 const StorageService = require('./StorageService');
 
 class RoomService {
-  constructor() {
+  constructor(cacheService) {
     this._pool = new Pool();
     this._storageService = new StorageService(path.resolve(__dirname, '../api/file'));
+    this._cacheService = cacheService;
   }
 
   async addRoom({
@@ -102,33 +103,51 @@ class RoomService {
   }
 
   async getRoomsByKosId(kosId) {
-    const query = {
-      text: 'SELECT * FROM rooms WHERE kos_id = $1',
-      values: [kosId],
-    };
+    try {
+      const rooms = await this._cacheService.get(`roomsKosId${kosId}`);
+      return {
+        rooms,
+        isCache: 1,
+      };
+    } catch (error) {
+      const query = {
+        text: 'SELECT * FROM rooms WHERE kos_id = $1',
+        values: [kosId],
+      };
 
-    const { rows } = await this._pool.query(query);
+      const { rows } = await this._pool.query(query);
 
-    if (!rows.length) {
-      throw new NotFoundError('Rooms tidak ditemukan.');
+      if (!rows.length) {
+        throw new NotFoundError('Rooms tidak ditemukan.');
+      }
+
+      await this._cacheService.set(`roomsKosId:${kosId}`, JSON.stringify(rows));
+      return { rooms: rows };
     }
-
-    return rows;
   }
 
   async getRoomById(id) {
-    const query = {
-      text: 'SELECT * FROM rooms WHERE id = $1',
-      values: [id],
-    };
+    try {
+      const room = await this._cacheService.get(`roomId:${id}`);
+      return {
+        room,
+        isCache: 1,
+      };
+    } catch (error) {
+      const query = {
+        text: 'SELECT * FROM rooms WHERE id = $1',
+        values: [id],
+      };
 
-    const { rows } = await this._pool.query(query);
+      const { rows } = await this._pool.query(query);
 
-    if (!rows.length) {
-      throw new NotFoundError('Room tidak ditemukan.');
+      if (!rows.length) {
+        throw new NotFoundError('Room tidak ditemukan.');
+      }
+
+      await this._cacheService.set(`roomId:${id}`, JSON.stringify(rows));
+      return { room: rows };
     }
-
-    return rows;
   }
 
   async editRoomById(id, {

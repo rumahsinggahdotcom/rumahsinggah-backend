@@ -77,7 +77,7 @@ class KossHandler {
   }
 
   async getKossHandler(request, h) {
-    const koss = await this._kossService.getKoss();
+    const { koss, isCache } = await this._kossService.getKoss();
 
     const response = h.response({
       status: 'success',
@@ -86,13 +86,16 @@ class KossHandler {
       },
     });
 
+    if (isCache) {
+      response.header('X-Data-Source', 'cache');
+    }
     response.code(200);
     return response;
   }
 
   async getKosByIdHandler(request, h) {
     const { id } = request.params;
-    const kos = await this._kossService.getKosById(id);
+    const { kos, isCache } = await this._kossService.getKosById(id);
 
     const response = h.response({
       status: 'success',
@@ -100,6 +103,10 @@ class KossHandler {
         kos,
       },
     });
+
+    if (isCache) {
+      response.header('X-Data-Source', 'cache');
+    }
 
     response.code(200);
     return response;

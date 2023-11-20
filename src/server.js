@@ -32,14 +32,18 @@ const AuthenticationService = require('./services/AuthenticationsService');
 const AuthenticationsValidator = require('./validator/authentications');
 const TokenManager = require('./tokenize/TokenManager');
 
+// Cache
+const CacheService = require('./services/CacheService');
+
 require('dotenv').config();
 
 const init = async () => {
+  const cacheService = new CacheService();
   const usersService = new UsersService();
   const ownersService = new OwnersService();
-  const kossService = new KossService();
+  const kossService = new KossService(cacheService);
   const storageService = new StorageService(path.resolve(__dirname, 'api/file'));
-  const roomsService = new RoomsService();
+  const roomsService = new RoomsService(cacheService);
   const authService = new AuthenticationService();
 
   const server = hapi.server({

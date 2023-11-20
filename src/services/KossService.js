@@ -7,9 +7,10 @@ const { mapDBToModel } = require('../utils');
 const StorageService = require('./StorageService');
 
 class KossService {
-  constructor() {
+  constructor(cacheService) {
     this._pool = new Pool();
     this._storageService = new StorageService(path.resolve(__dirname, '../api/file'));
+    this._cacheService = cacheService;
   }
 
   async addKos({
@@ -92,52 +93,72 @@ class KossService {
   }
 
   async getKoss() {
-    const query = {
-      text: 'SELECT k.id, k.name, k.owner_id, k.address, i.images FROM koss AS k LEFT JOIN image_koss AS i ON k.id = i.kos_id',
-    };
+    try {
+      const koss = await this._cacheService.get('koss');
+      return {
+        koss,
+        isCache: 1,
+      };
+    } catch (error) {
+      const query = {
+        text: 'SELECT k.id, k.name, k.owner_id, k.address, i.images FROM koss AS k LEFT JOIN image_koss AS i ON k.id = i.kos_id',
+      };
 
-    const { rows } = await this._pool.query(query);
+      const { rows } = await this._pool.query(query);
 
-    const groupedData = rows.reduce((result, item) => {
-      const existingItem = result.find((groupedItem) => groupedItem.id === item.id);
+      const groupedData = rows.reduce((result, item) => {
+        const existingItem = result.find((groupedItem) => groupedItem.id === item.id);
 
-      if (existingItem) {
-        existingItem.images.push({ image: item.images });
-      } else {
-        result.push({
-          id: item.id,
-          name: item.name,
-          owner_id: item.owner_id,
-          address: item.address,
-          images: [{ image: item.images }],
-        });
-      }
+        if (existingItem) {
+          existingItem.images.push({ image: item.images });
+        } else {
+          result.push({
+            id: item.id,
+            name: item.name,
+            owner_id: item.owner_id,
+            address: item.address,
+            images: [{ image: item.images }],
+          });
+        }
 
-      return result;
-    }, []);
+        return result;
+      }, []);
 
-    return groupedData.map(mapDBToModel);
+      await this._cacheService.set('koss', JSON.stringify(groupedData));
+      const koss = groupedData.map(mapDBToModel);
+
+      return { koss };
+    }
   }
 
   async getKosById(kosId) {
-    const queryImageKos = {
-      text: 'SELECT id as image_id, images FROM image_koss WHERE kos_id = $1',
-      values: [kosId],
-    };
-    const resultImageKos = await this._pool.query(queryImageKos);
+    try {
+      const kos = await this._cacheService.get(`kosId:${kosId}`);
+      return {
+        kos,
+        isCache: 1,
+      };
+    } catch (error) {
+      const queryImageKos = {
+        text: 'SELECT id as image_id, images FROM image_koss WHERE kos_id = $1',
+        values: [kosId],
+      };
+      const resultImageKos = await this._pool.query(queryImageKos);
 
-    const queryKos = {
-      text: 'SELECT * FROM koss where id = $1',
-      values: [kosId],
-    };
-    const resultKos = await this._pool.query(queryKos);
-    if (!resultKos.rows) {
-      throw new NotFoundError('Kos Tidak Ditemukan.');
+      const queryKos = {
+        text: 'SELECT * FROM koss where id = $1',
+        values: [kosId],
+      };
+      const resultKos = await this._pool.query(queryKos);
+      if (!resultKos.rows) {
+        throw new NotFoundError('Kos Tidak Ditemukan.');
+      }
+      const kos = resultKos.rows[0];
+      kos.image = resultImageKos.rows;
+
+      await this._cacheService.set(`kosId:${kosId}`, JSON.stringify(kos));
+      return { kos };
     }
-    const kos = resultKos.rows[0];
-    kos.image = resultImageKos.rows;
-
-    return kos;
   }
 
   async editKosById(id, {
