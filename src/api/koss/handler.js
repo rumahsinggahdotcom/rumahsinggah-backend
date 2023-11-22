@@ -11,18 +11,19 @@ class KossHandler {
 
   async postKosHandler(request, h) {
     const {
-      ownerId,
+      // ownerId,
       name,
       address,
       description,
     } = request.payload;
 
     const { images } = request.payload;
+    const { id: credentialId } = request.auth.credentials;
     const arrayImgs = assignImageToArray(images);
 
     // Validate Kos Payload
     await this._validator.validateKosPayload({
-      ownerId,
+      ownerId: credentialId,
       name,
       address,
       description,
@@ -36,7 +37,7 @@ class KossHandler {
     }
 
     const kosId = await this._kossService.addKos({
-      ownerId,
+      ownerId: credentialId,
       name,
       address,
       description,
@@ -57,6 +58,9 @@ class KossHandler {
   async postKosImagesHandler(request, h) {
     const { kosId, images } = request.payload;
     const arrayImgs = assignImageToArray(images);
+    const { id: credentialId } = request.auth.credentials;
+
+    await this._kossService.verifyKosAccess({ kosId, owner: credentialId });
 
     await Promise.all(arrayImgs.map(async (image) => {
       await this._validator.validateImageKosPayload(image);

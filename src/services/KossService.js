@@ -3,6 +3,7 @@ const { nanoid } = require('nanoid');
 const path = require('path');
 const InvariantError = require('../exceptions/InvariantError');
 const NotFoundError = require('../exceptions/NotFoundError');
+const AuthenticationError = require('../exceptions/AuthenticationError');
 const { mapDBToModel } = require('../utils');
 const StorageService = require('./StorageService');
 
@@ -191,6 +192,41 @@ class KossService {
     }
 
     return filename;
+  }
+
+  async getOwnerKoss(owner) {
+    const query = {
+      text: 'SELECT * FROM koss WHERE owner_id = $1',
+      values: [owner],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows.length) {
+      throw new InvariantError('Kos tidak ditemukan');
+    }
+  }
+
+  async verifyKosAccess({
+    id,
+    owner,
+  }) {
+    const query = {
+      text: 'SELECT id, owner_id FROM koss WHERE id = $1',
+      values: [id],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows.length) {
+      throw new InvariantError('Kos tidak ditemukan');
+    }
+
+    const kos = rows[0];
+
+    if (kos.owner_id !== owner) {
+      throw new AuthenticationError('Anda tidak berhak mengakses resource ini.');
+    }
   }
 }
 
