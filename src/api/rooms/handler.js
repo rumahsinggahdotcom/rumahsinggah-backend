@@ -50,8 +50,10 @@ class RoomsHandler {
 
   async postRoomImagesHandler(request, h) {
     const { roomId, images } = request.payload;
+    const { id: credentialId } = request.auth.credentials;
     const arrayImgs = assignImageToArray(images);
 
+    await this._roomsService.verifyRoomAccess({ roomId, owner: credentialId });
     Promise.all(arrayImgs.map(async (image) => {
       await this._validator.validateImageRoomPayload(image);
     }));
@@ -117,7 +119,9 @@ class RoomsHandler {
       quantity,
       description,
     } = request.payload;
+    const { id: credentialId } = request.auth.credentials;
 
+    await this._roomsService.verifyRoomAccess({ roomId, owner: credentialId });
     await this._roomsService.editRoomById(roomId, {
       type,
       maxPeople,
@@ -138,7 +142,10 @@ class RoomsHandler {
 
   async delImageRoomByIdHandler(request, h) {
     const { id } = request.params;
-    const filename = await this._roomsService.delImageRoomById(id);
+    const { id: credentialId } = request.auth.credentials;
+    const { imageId } = request.payload;
+    await this._roomsService.verifyRoomAccess(id, credentialId);
+    const filename = await this._roomsService.delImageRoomById(id, { imageId });
     await this._storageService.deleteFile(filename, 'rooms');
 
     const response = h.response({

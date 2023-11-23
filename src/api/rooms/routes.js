@@ -42,7 +42,7 @@ const routes = (handler) => [
   },
   {
     method: 'DELETE',
-    path: '/koss/room/images/{id}',
+    path: '/koss/room/{id}/images',
     handler: handler.delImageRoomByIdHandler,
   },
 ];

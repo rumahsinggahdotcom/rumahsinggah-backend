@@ -3,6 +3,7 @@ const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const InvariantError = require('../exceptions/InvariantError');
 const NotFoundError = require('../exceptions/NotFoundError');
+const AuthenticationError = require('../exceptions/AuthenticationError');
 const StorageService = require('./StorageService');
 
 class RoomService {
@@ -25,13 +26,11 @@ class RoomService {
       await client.query('BEGIN');
       await client.query('SET CONSTRAINTS ALL DEFERRED');
       const id = `room-${nanoid(16)}`;
-      console.log('1');
       const query = {
         text: 'INSERT INTO rooms values ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
         values: [id, kosId, type, maxPeople, price, quantity, description],
       };
       const { rows } = await client.query(query);
-      console.log('2');
       const roomId = rows[0].id;
 
       if (!roomId) {
@@ -81,10 +80,7 @@ class RoomService {
       values: [roomId],
     };
     const resultRoom = await client.query(roomQuery);
-    console.log(resultRoom);
-    console.log('oiiii1');
     const kosId = resultRoom.rows[0].kos_id;
-    console.log('oiiii2');
     const roomType = resultRoom.rows[0].type;
     const filename = `${kosId}_${roomType}_${image.hapi.filename}`;
     const id = `image_room-${nanoid(16)}`;
@@ -168,10 +164,10 @@ class RoomService {
     }
   }
 
-  async delImageRoomById(id) {
+  async delImageRoomById(roomId, { imageId }) {
     const query = {
-      text: 'DELETE FROM image_rooms WHERE id = $1 RETURNING id, image',
-      values: [id],
+      text: 'DELETE FROM image_rooms WHERE room_id = $1 AND id = $2 RETURNING id, image',
+      values: [roomId, imageId],
     };
 
     const { rows } = await this._pool.query(query);
@@ -182,6 +178,25 @@ class RoomService {
     }
 
     return filename;
+  }
+
+  async verifyRoomAccess(roomId, credentialId) {
+    const query = {
+      text: 'SELECT k.owner_id FROM koss as k LEFT JOIN room as r ON k.id = r.kos_id WHERE r.id = $1',
+      values: [roomId],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows.length) {
+      throw new InvariantError('Kos tidak ditemukan.');
+    }
+
+    const kos = rows[0];
+
+    if (kos.owner_id !== credentialId) {
+      throw new AuthenticationError('Anda tidak berhak mengakses resource ini.');
+    }
   }
 }
 module.exports = RoomService;
