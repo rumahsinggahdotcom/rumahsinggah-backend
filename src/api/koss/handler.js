@@ -60,7 +60,7 @@ class KossHandler {
     const arrayImgs = assignImageToArray(images);
     const { id: credentialId } = request.auth.credentials;
 
-    await this._kossService.verifyKosAccess({ kosId, owner: credentialId });
+    await this._kossService.verifyKosAccess(kosId, credentialId);
 
     await Promise.all(arrayImgs.map(async (image) => {
       await this._validator.validateImageKosPayload(image);
@@ -140,7 +140,7 @@ class KossHandler {
     const { name, address, description } = request.payload;
     const { id: credentialId } = request.auth.credentials;
 
-    await this._kossService.verifyKosAccess({ id, owner: credentialId });
+    await this._kossService.verifyKosAccess(id, credentialId);
 
     // Validate Kos Payload
     await this._validator.validateKosPayload({ name, address, description });
@@ -158,10 +158,11 @@ class KossHandler {
   async delImageKosByIdHandler(request, h) {
     const { id } = request.params;
     const { id: credentialId } = request.auth.credentials;
+    const { imageId } = request.payload;
 
-    await this._kossService.verifyKosAccess({ id, owner: credentialId });
+    await this._kossService.verifyKosAccess(id, credentialId);
 
-    const filename = await this._kossService.delImageKosById(id);
+    const filename = await this._kossService.delImageKosById(id, { imageId });
     await this._storageService.deleteFile(filename, 'koss');
 
     const response = h.response({

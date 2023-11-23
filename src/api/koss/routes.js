@@ -42,7 +42,7 @@ const kossRoutes = (handler) => [
   },
   {
     method: 'DELETE',
-    path: '/koss/images/{id}',
+    path: '/koss/{id}/images',
     handler: handler.delImageKosByIdHandler,
   },
 
