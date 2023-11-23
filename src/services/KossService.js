@@ -180,10 +180,10 @@ class KossService {
     }
   }
 
-  async delImageKosById(id) {
+  async delImageKosById(id, { imageId }) {
     const query = {
-      text: 'DELETE FROM image_koss WHERE id = $1 RETURNING id, image',
-      values: [id],
+      text: 'DELETE FROM image_koss WHERE kos_id = $1 AND id = $2 RETURNING id, image',
+      values: [id, imageId],
     };
 
     const { rows } = await this._pool.query(query);
@@ -241,10 +241,7 @@ class KossService {
     }
   }
 
-  async verifyKosAccess({
-    id,
-    owner,
-  }) {
+  async verifyKosAccess(id, credentialId) {
     const query = {
       text: 'SELECT id, owner_id FROM koss WHERE id = $1',
       values: [id],
@@ -258,7 +255,7 @@ class KossService {
 
     const kos = rows[0];
 
-    if (kos.owner_id !== owner) {
+    if (kos.owner_id !== credentialId) {
       throw new AuthenticationError('Anda tidak berhak mengakses resource ini.');
     }
   }
