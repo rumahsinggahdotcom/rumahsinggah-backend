@@ -45,6 +45,13 @@ const kossRoutes = (handler) => [
     path: '/koss/images/{id}',
     handler: handler.delImageKosByIdHandler,
   },
+
+  // Owners Koss
+  {
+    method: 'GET',
+    path: '/owner/koss',
+    handler: handler.getOwnerKossHandler,
+  },
 ];
 
 module.exports = kossRoutes;

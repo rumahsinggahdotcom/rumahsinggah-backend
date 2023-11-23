@@ -102,7 +102,7 @@ class KossService {
       };
     } catch (error) {
       const query = {
-        text: 'SELECT k.id, k.name, k.owner_id, k.address, i.images FROM koss AS k LEFT JOIN image_koss AS i ON k.id = i.kos_id',
+        text: 'SELECT k.id, k.owner_id, k.name, k.address, k.description, k.rating, i.image FROM koss AS k LEFT JOIN image_koss AS i ON k.id = i.kos_id',
       };
 
       const { rows } = await this._pool.query(query);
@@ -111,14 +111,16 @@ class KossService {
         const existingItem = result.find((groupedItem) => groupedItem.id === item.id);
 
         if (existingItem) {
-          existingItem.images.push({ image: item.images });
+          existingItem.images.push({ image: item.image });
         } else {
           result.push({
             id: item.id,
-            name: item.name,
             owner_id: item.owner_id,
+            name: item.name,
             address: item.address,
-            images: [{ image: item.images }],
+            description: item.description,
+            rating: item.rating,
+            image: [{ image: item.image }],
           });
         }
 
@@ -141,7 +143,7 @@ class KossService {
       };
     } catch (error) {
       const queryImageKos = {
-        text: 'SELECT id as image_id, images FROM image_koss WHERE kos_id = $1',
+        text: 'SELECT id as image_id, image FROM image_koss WHERE kos_id = $1',
         values: [kosId],
       };
       const resultImageKos = await this._pool.query(queryImageKos);
@@ -180,7 +182,7 @@ class KossService {
 
   async delImageKosById(id) {
     const query = {
-      text: 'DELETE FROM image_koss where id = $1 RETURNING id, image',
+      text: 'DELETE FROM image_koss WHERE id = $1 RETURNING id, image',
       values: [id],
     };
 
@@ -194,16 +196,48 @@ class KossService {
     return filename;
   }
 
-  async getOwnerKoss(owner) {
-    const query = {
-      text: 'SELECT * FROM koss WHERE owner_id = $1',
-      values: [owner],
-    };
+  async getOwnerKoss({ owner }) {
+    try {
+      const koss = await this._cacheService.get(`ownerkoss:${owner}`);
+      return {
+        ownerKoss: koss,
+        isCache: 1,
+      };
+    } catch (error) {
+      const query = {
+        text: 'SELECT k.id, k.owner_id, k.name, k.address, k.description, k.rating, i.image FROM koss as k LEFT JOIN image_koss as i ON k.id = i.kos_id WHERE k.owner_id = $1',
+        values: [owner],
+      };
 
-    const { rows } = await this._pool.query(query);
+      const { rows } = await this._pool.query(query);
 
-    if (!rows.length) {
-      throw new InvariantError('Kos tidak ditemukan');
+      if (!rows.length) {
+        throw new InvariantError('Kos tidak ditemukan');
+      }
+
+      const groupedData = rows.reduce((result, item) => {
+        const existingItem = result.find((resultData) => resultData.id === item.id);
+
+        if (existingItem) {
+          result.push({ image: item.image });
+        } else {
+          result.push({
+            id: item.id,
+            owner_id: item.owner_id,
+            name: item.name,
+            address: item.address,
+            description: item.description,
+            rating: item.rating,
+            image: [{ image: item.image }],
+          });
+        }
+
+        return result;
+      }, []);
+
+      await this._cacheService.set(`ownerkoss:${owner}`, JSON.stringify(groupedData));
+
+      return { ownerKoss: groupedData };
     }
   }
 

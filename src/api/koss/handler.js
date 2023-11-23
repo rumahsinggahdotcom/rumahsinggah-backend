@@ -116,9 +116,31 @@ class KossHandler {
     return response;
   }
 
+  async getOwnerKossHandler(request, h) {
+    const { id: credentialId } = request.auth.credentials;
+    const { ownerKoss, isCache } = await this._kossService.getOwnerKoss({ owner: credentialId });
+
+    const response = h.response({
+      status: 'success',
+      data: {
+        ownerKoss,
+      },
+    });
+
+    if (isCache) {
+      response.header('X-Data-Source', 'cache');
+    }
+
+    response.code(200);
+    return response;
+  }
+
   async putKosByIdHandler(request, h) {
     const { id } = request.params;
     const { name, address, description } = request.payload;
+    const { id: credentialId } = request.auth.credentials;
+
+    await this._kossService.verifyKosAccess({ id, owner: credentialId });
 
     // Validate Kos Payload
     await this._validator.validateKosPayload({ name, address, description });
@@ -135,9 +157,11 @@ class KossHandler {
 
   async delImageKosByIdHandler(request, h) {
     const { id } = request.params;
+    const { id: credentialId } = request.auth.credentials;
+
+    await this._kossService.verifyKosAccess({ id, owner: credentialId });
 
     const filename = await this._kossService.delImageKosById(id);
-
     await this._storageService.deleteFile(filename, 'koss');
 
     const response = h.response({
