@@ -23,6 +23,7 @@ const routes = (handler) => [
         output: 'stream',
         maxBytes: 1024000,
       },
+      auth: 'kossapp_jwt',
     },
   },
   {
@@ -39,11 +40,17 @@ const routes = (handler) => [
     method: 'PUT',
     path: '/koss/{kosId}/room/{roomId}',
     handler: handler.putRoomByIdHandler,
+    options: {
+      auth: 'kossapp_jwt',
+    },
   },
   {
     method: 'DELETE',
     path: '/koss/room/{id}/images',
     handler: handler.delImageRoomByIdHandler,
+    options: {
+      auth: 'kossapp_jwt',
+    },
   },
 ];
 

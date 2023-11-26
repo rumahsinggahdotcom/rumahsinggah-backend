@@ -10,6 +10,7 @@ const kossRoutes = (handler) => [
         output: 'stream',
         maxBytes: 512000, // 500KB
       },
+      auth: 'kossapp_jwt',
     },
   },
   {
@@ -23,6 +24,7 @@ const kossRoutes = (handler) => [
         output: 'stream',
         maxBytes: 512000,
       },
+      auth: 'kossapp_jwt',
     },
   },
   {
@@ -39,11 +41,17 @@ const kossRoutes = (handler) => [
     method: 'PUT',
     path: '/koss/{id}',
     handler: handler.putKosByIdHandler,
+    options: {
+      auth: 'kossapp_jwt',
+    },
   },
   {
     method: 'DELETE',
     path: '/koss/{id}/images',
     handler: handler.delImageKosByIdHandler,
+    options: {
+      auth: 'kossapp_jwt',
+    },
   },
 
   // Owners Koss
@@ -51,6 +59,9 @@ const kossRoutes = (handler) => [
     method: 'GET',
     path: '/owner/koss',
     handler: handler.getOwnerKossHandler,
+    options: {
+      auth: 'kossapp_jwt',
+    },
   },
 ];
 

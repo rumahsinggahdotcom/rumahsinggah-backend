@@ -42,7 +42,7 @@ class KossService {
         }));
       }
       await client.query('COMMIT');
-
+      await this._cacheService.delete('koss');
       return rows[0].id;
     } catch (error) {
       await client.query('ROLLBACK');
@@ -60,7 +60,7 @@ class KossService {
         imgsId.push(imgId);
       }));
       await client.query('COMMIT');
-
+      await this._cacheService.delete('koss');
       return imgsId;
     } catch (error) {
       await client.query('ROLLBACK');
@@ -111,7 +111,7 @@ class KossService {
         const existingItem = result.find((groupedItem) => groupedItem.id === item.id);
 
         if (existingItem) {
-          existingItem.images.push({ image: item.image });
+          existingItem.image.push({ image: item.image });
         } else {
           result.push({
             id: item.id,
@@ -127,8 +127,8 @@ class KossService {
         return result;
       }, []);
 
-      await this._cacheService.set('koss', JSON.stringify(groupedData));
       const koss = groupedData.map(mapDBToModel);
+      await this._cacheService.set('koss', JSON.stringify(koss));
 
       return { koss };
     }
@@ -178,6 +178,7 @@ class KossService {
     if (!rows[0].id) {
       throw new InvariantError('Gagal memperbarui Kos. Id tidak ditemukan.');
     }
+    await this._cacheService.delete('koss');
   }
 
   async delImageKosById(id, { imageId }) {
@@ -192,7 +193,7 @@ class KossService {
     if (!rows[0].id) {
       throw new NotFoundError('Image gagal dihapus. Id tidak ditemukan');
     }
-
+    await this._cacheService.delete('koss');
     return filename;
   }
 

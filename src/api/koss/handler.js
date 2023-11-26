@@ -85,9 +85,7 @@ class KossHandler {
 
     const response = h.response({
       status: 'success',
-      data: {
-        koss,
-      },
+      data: koss,
     });
 
     if (isCache) {
