@@ -29,6 +29,7 @@ const mapDBToModel = ({
 
 /* assign images payload to array */
 const assignImageToArray = (images) => {
+  console.log(images);
   let arrayImgs = [];
   if (images.length > 1) {
     arrayImgs = images;

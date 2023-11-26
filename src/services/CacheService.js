@@ -5,6 +5,8 @@ class CacheService {
     this._client = redis.createClient({
       socket: {
         host: process.env.REDIS_SERVER,
+        // host: ,
+        // port: process.env.REDIS_PORT,
       },
     });
 
@@ -26,10 +28,10 @@ class CacheService {
 
     if (result === null) throw new Error('Cache tidak ditemukan.');
 
-    return result;
+    return JSON.parse(result);
   }
 
-  async del(key) {
+  async delete(key) {
     return this._client.del(key);
   }
 }
