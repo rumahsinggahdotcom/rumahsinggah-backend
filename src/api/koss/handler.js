@@ -30,7 +30,7 @@ class KossHandler {
     });
 
     // Validate Image Kos Payload
-    if (arrayImgs) {
+    if (arrayImgs.length > 1) {
       await Promise.all(arrayImgs.map(async (image) => {
         await this._validator.validateImageKosPayload(image.hapi.headers);
       }));
@@ -62,11 +62,12 @@ class KossHandler {
 
     await this._kossService.verifyKosAccess(kosId, credentialId);
 
-    await Promise.all(arrayImgs.map(async (image) => {
-      await this._validator.validateImageKosPayload(image);
-    }));
-
-    const imgsId = await this._kossService.addImageKos(kosId, arrayImgs);
+    if (arrayImgs.length > 0) {
+      await Promise.all(arrayImgs.map(async (image) => {
+        await this._validator.validateImageKosPayload(image);
+      }));
+    }
+    const imgsId = await this._kossService.addImageKos(kosId, arrayImgs, credentialId);
 
     const response = h.response({
       status: 'success',

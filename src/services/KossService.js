@@ -36,13 +36,15 @@ class KossService {
       }
       const kosId = rows[0].id;
 
-      if (arrayImgs) {
+      if (arrayImgs.length > 0) {
         await Promise.all(arrayImgs.map(async (image) => {
           await this.storeImgKossToStorageDb(kosId, image, { client });
         }));
       }
       await client.query('COMMIT');
       await this._cacheService.delete('koss');
+      await this._cacheService.delete(`kosId:${id}`);
+      await this._cacheService.delete(`ownerkoss:${ownerId}`);
       return rows[0].id;
     } catch (error) {
       await client.query('ROLLBACK');
@@ -50,17 +52,23 @@ class KossService {
     }
   }
 
-  async addImageKos(roomId, arrayImgs) {
+  async addImageKos(id, arrayImgs, ownerId) {
     const imgsId = [];
     const client = await this._pool.connect();
     try {
       await client.query('BEGIN');
-      await Promise.all(arrayImgs.map(async (image) => {
-        const imgId = await this.storeImgKossToStorageDb(roomId, image, { client });
-        imgsId.push(imgId);
-      }));
+
+      if (arrayImgs.length > 0) {
+        await Promise.all(arrayImgs.map(async (image) => {
+          const imgId = await this.storeImgKossToStorageDb(id, image, { client });
+          imgsId.push(imgId);
+        }));
+      }
       await client.query('COMMIT');
       await this._cacheService.delete('koss');
+      await this._cacheService.delete(`kosId:${id}`);
+      await this._cacheService.delete(`ownerkoss:${ownerId}`);
+
       return imgsId;
     } catch (error) {
       await client.query('ROLLBACK');
@@ -170,7 +178,7 @@ class KossService {
     description,
   }) {
     const query = {
-      text: 'UPDATE koss SET name = $2, address = $3, description = $4 WHERE id = $1 RETURNING id',
+      text: 'UPDATE koss SET name = $2, address = $3, description = $4 WHERE id = $1 RETURNING id, owner_id',
       values: [id, name, address, description],
     };
 
@@ -179,6 +187,8 @@ class KossService {
       throw new InvariantError('Gagal memperbarui Kos. Id tidak ditemukan.');
     }
     await this._cacheService.delete('koss');
+    await this._cacheService.delete(`kosId:${id}`);
+    await this._cacheService.delete(`ownerkoss:${rows[0].owner_id}`);
   }
 
   async delImageKosById(id, { imageId }) {
@@ -194,6 +204,7 @@ class KossService {
       throw new NotFoundError('Image gagal dihapus. Id tidak ditemukan');
     }
     await this._cacheService.delete('koss');
+    await this._cacheService.delete(`kosId:${id}`);
     return filename;
   }
 
@@ -218,9 +229,8 @@ class KossService {
 
       const groupedData = rows.reduce((result, item) => {
         const existingItem = result.find((resultData) => resultData.id === item.id);
-
         if (existingItem) {
-          result.push({ image: item.image });
+          existingItem.image.push({ image: item.image });
         } else {
           result.push({
             id: item.id,
