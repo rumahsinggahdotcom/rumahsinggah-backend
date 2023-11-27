@@ -49,7 +49,6 @@ class OwnersService {
     };
 
     const { rows } = await this._pool.query(queryOwner);
-    console.log(rows.map(mapDBToModel)[0]);
 
     if (!rows.length) {
       throw new NotFoundError('Owner tidak ditemukan');
@@ -116,7 +115,6 @@ class OwnersService {
     };
 
     const result = await this._pool.query(query);
-    console.log(result);
 
     if (!result.rowCount) {
       throw new NotFoundError('Gagal Mengubah Password. Id tidak ditemukan');
@@ -124,12 +122,10 @@ class OwnersService {
     const { password: hashedPassword } = result.rows[0];
 
     const match = await bcrypt.compare(oldPassword, hashedPassword);
-    console.log('testing purpose match:', match);
     return match;
   }
 
   async verifyOwnersCredentials({ username, password }) {
-    console.log(username, password);
     const query = {
       text: 'SELECT id, password FROM owners WHERE username = $1',
       values: [username],
