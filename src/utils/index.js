@@ -11,7 +11,7 @@ const mapDBToModel = ({
   address,
   gender,
   phone_number,
-  images,
+  image,
 }) => ({
   id,
   ownerId: owner_id,
@@ -24,19 +24,23 @@ const mapDBToModel = ({
   address,
   gender,
   phoneNumber: phone_number,
-  images,
+  image,
 });
 
 /* assign images payload to array */
 const assignImageToArray = (images) => {
-  console.log(images);
+  // console.log(images._data.length);
+  // if (!isEmpty(images._data.length)) {
+  //   console.log('eyy');
+  // }
+  // console.log(images.length);
+  // console.log(images._data.length);
   let arrayImgs = [];
-  if (images.length > 1) {
-    arrayImgs = images;
+  if (!Array.isArray(images)) {
+    if (images._data.length > 0) arrayImgs.push(images);
   } else {
-    arrayImgs.push(images);
+    arrayImgs = images;
   }
-
   return arrayImgs;
 };
 
