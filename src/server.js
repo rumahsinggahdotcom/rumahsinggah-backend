@@ -105,6 +105,7 @@ const init = async () => {
     {
       plugin: roomApp,
       options: {
+        kossService,
         roomsService,
         storageService,
         validator: RoomsValidator,
