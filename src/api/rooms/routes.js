@@ -10,11 +10,12 @@ const routes = (handler) => [
         output: 'stream',
         maxBytes: 1024000,
       },
+      auth: 'kossapp_jwt',
     },
   },
   {
     method: 'POST',
-    path: '/koss/room/images',
+    path: '/koss/{kosId}/room/images',
     handler: handler.postRoomImagesHandler,
     options: {
       payload: {
@@ -33,7 +34,7 @@ const routes = (handler) => [
   },
   {
     method: 'GET',
-    path: '/koss/{kosId}/rooms/{roomId}',
+    path: '/koss/{kosId}/room/{roomId}',
     handler: handler.getRoomByIdHandler,
   },
   {
@@ -46,7 +47,7 @@ const routes = (handler) => [
   },
   {
     method: 'DELETE',
-    path: '/koss/room/{id}/images',
+    path: '/room/{roomId}/image/{imageId}',
     handler: handler.delImageRoomByIdHandler,
     options: {
       auth: 'kossapp_jwt',

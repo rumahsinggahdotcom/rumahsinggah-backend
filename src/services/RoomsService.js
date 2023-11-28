@@ -4,6 +4,7 @@ const { nanoid } = require('nanoid');
 const InvariantError = require('../exceptions/InvariantError');
 const NotFoundError = require('../exceptions/NotFoundError');
 const AuthenticationError = require('../exceptions/AuthenticationError');
+const { mapDBToModel } = require('../utils');
 const StorageService = require('./StorageService');
 
 class RoomService {
@@ -36,12 +37,13 @@ class RoomService {
       if (!roomId) {
         throw new InvariantError('Room Kos Gagal Ditambahkan.');
       }
-      if (arrayImgs) {
+      if (arrayImgs.length > 0) {
         await Promise.all(arrayImgs.map(async (image) => {
           await this.storeImgRoomsToStorageDb(roomId, image, { client });
         }));
       }
       await client.query('COMMIT');
+      await this._cacheService.delete(`roomsKosId:${kosId}`);
       return roomId;
     } catch (error) {
       await client.query('ROLLBACK');
@@ -51,9 +53,10 @@ class RoomService {
     }
   }
 
-  async addImageRoom(roomId, arrayImgs) {
+  async addImageRoom(kosId, roomId, arrayImgs) {
     const imgsId = [];
     const client = await this._pool.connect();
+    console.log(kosId);
 
     try {
       await client.query('BEGIN');
@@ -64,6 +67,7 @@ class RoomService {
       }));
 
       await client.query('COMMIT');
+      await this._cacheService.delete(`roomsKosId:${kosId}`);
 
       return imgsId;
     } catch (error) {
@@ -100,14 +104,15 @@ class RoomService {
 
   async getRoomsByKosId(kosId) {
     try {
-      const rooms = await this._cacheService.get(`roomsKosId${kosId}`);
+      // throw new InvariantError('eaaa');
+      const rooms = await this._cacheService.get(`roomsKosId:${kosId}`);
       return {
         rooms,
         isCache: 1,
       };
     } catch (error) {
       const query = {
-        text: 'SELECT * FROM rooms WHERE kos_id = $1',
+        text: 'SELECT r.id, r.kos_id, r.type, r.max_people, r.price, r.quantity, r.description, i.image FROM rooms as r LEFT JOIN image_rooms as i ON r.id = i.room_id WHERE kos_id = $1',
         values: [kosId],
       };
 
@@ -117,8 +122,30 @@ class RoomService {
         throw new NotFoundError('Rooms tidak ditemukan.');
       }
 
-      await this._cacheService.set(`roomsKosId:${kosId}`, JSON.stringify(rows));
-      return { rooms: rows };
+      const groupedData = rows.reduce((result, item) => {
+        const existingItem = result.find((groupedItem) => groupedItem.id === item.id);
+
+        if (existingItem) {
+          existingItem.image.push({ image: item.image });
+        } else {
+          result.push({
+            id: item.id,
+            kos_id: item.kos_id,
+            type: item.type,
+            max_people: item.max_people,
+            price: item.price,
+            quantity: item.quantity,
+            description: item.description,
+            image: [{ image: item.image }],
+          });
+        }
+
+        return result;
+      }, []);
+
+      const roomData = groupedData.map(mapDBToModel);
+      await this._cacheService.set(`roomsKosId:${kosId}`, JSON.stringify(roomData));
+      return { rooms: roomData };
     }
   }
 
@@ -130,19 +157,29 @@ class RoomService {
         isCache: 1,
       };
     } catch (error) {
-      const query = {
+      const queryRoom = {
         text: 'SELECT * FROM rooms WHERE id = $1',
         values: [id],
       };
 
-      const { rows } = await this._pool.query(query);
+      const resultRoom = await this._pool.query(queryRoom);
 
-      if (!rows.length) {
+      if (!resultRoom.rows.length) {
         throw new NotFoundError('Room tidak ditemukan.');
       }
 
-      await this._cacheService.set(`roomId:${id}`, JSON.stringify(rows));
-      return { room: rows };
+      const queryImageroom = {
+        text: 'SELECT image FROM image_rooms WHERE room_id = $1',
+        values: [id],
+      };
+
+      const resultImageRoom = await this._pool.query(queryImageroom);
+
+      const roomData = resultRoom.rows[0];
+      roomData.image = resultImageRoom.rows;
+
+      await this._cacheService.set(`roomId:${id}`, JSON.stringify(roomData));
+      return { room: roomData };
     }
   }
 
@@ -164,7 +201,7 @@ class RoomService {
     }
   }
 
-  async delImageRoomById(roomId, { imageId }) {
+  async delImageRoomById(roomId, imageId) {
     const query = {
       text: 'DELETE FROM image_rooms WHERE room_id = $1 AND id = $2 RETURNING id, image',
       values: [roomId, imageId],
@@ -182,7 +219,7 @@ class RoomService {
 
   async verifyRoomAccess(roomId, credentialId) {
     const query = {
-      text: 'SELECT k.owner_id FROM koss as k LEFT JOIN room as r ON k.id = r.kos_id WHERE r.id = $1',
+      text: 'SELECT k.owner_id FROM koss as k LEFT JOIN rooms as r ON k.id = r.kos_id WHERE r.id = $1',
       values: [roomId],
     };
 
