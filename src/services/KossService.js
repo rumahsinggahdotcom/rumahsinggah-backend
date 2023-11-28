@@ -191,7 +191,7 @@ class KossService {
     await this._cacheService.delete(`ownerkoss:${rows[0].owner_id}`);
   }
 
-  async delImageKosById(id, { imageId }) {
+  async delImageKosById(id, imageId) {
     const query = {
       text: 'DELETE FROM image_koss WHERE kos_id = $1 AND id = $2 RETURNING id, image',
       values: [id, imageId],
@@ -253,13 +253,14 @@ class KossService {
   }
 
   async verifyKosAccess(id, credentialId) {
+    console.log(id, credentialId);
     const query = {
       text: 'SELECT id, owner_id FROM koss WHERE id = $1',
       values: [id],
     };
 
     const { rows } = await this._pool.query(query);
-
+    console.log(rows);
     if (!rows.length) {
       throw new InvariantError('Kos tidak ditemukan');
     }
