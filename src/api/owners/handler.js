@@ -28,20 +28,23 @@ class OwnersHandler {
     const {
       fullname,
       address,
+      gender,
       phoneNumber,
     } = request.payload;
 
     const { id: credentialId } = request.auth.params;
 
-    await this._validator.validateOwnerPayload({
+    await this._validator.validateEditOwnerPayload({
       fullname,
       address,
+      gender,
       phoneNumber,
     });
 
     await this._service.editOwnerById(credentialId, {
       fullname,
       address,
+      gender,
       phoneNumber,
     });
 

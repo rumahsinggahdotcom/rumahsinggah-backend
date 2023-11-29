@@ -71,11 +71,12 @@ class OwnersService {
   async editOwnerById(id, {
     fullname,
     address,
+    gender,
     phoneNumber,
   }) {
     const query = {
-      text: 'UPDATE owners SET fullname = $1, address = $2, phone_number = $3 WHERE id = $4 RETURNING id',
-      values: [fullname, address, phoneNumber, id],
+      text: 'UPDATE owners SET fullname = $2, address = $3, gender = $4, phone_number = $5 WHERE id = $1 RETURNING id',
+      values: [id, fullname, address, gender, phoneNumber],
     };
 
     const { rows } = await this._pool.query(query);
