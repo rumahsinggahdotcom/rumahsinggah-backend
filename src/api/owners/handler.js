@@ -24,26 +24,26 @@ class OwnersHandler {
     return response;
   }
 
-  async getOwnerByIdHandler(request, h) {
-    const { id } = request.params;
-    const owner = await this._service.getOwnerById(id);
+  async putOwnerByIdHandler(request, h) {
+    const {
+      fullname,
+      address,
+      phoneNumber,
+    } = request.payload;
 
-    const response = h.response({
-      status: 'success',
-      data: {
-        owner,
-      },
+    const { id: credentialId } = request.auth.params;
+
+    await this._validator.validateOwnerPayload({
+      fullname,
+      address,
+      phoneNumber,
     });
 
-    response.code(200);
-    return response;
-  }
-
-  async putOwnerByIdHandler(request, h) {
-    this._validator.validateOwnerPayload(request.payload);
-    const { id } = request.params;
-
-    await this._service.editOwnerById(id, request.payload);
+    await this._service.editOwnerById(credentialId, {
+      fullname,
+      address,
+      phoneNumber,
+    });
 
     const response = h.response({
       status: 'success',
@@ -55,10 +55,22 @@ class OwnersHandler {
   }
 
   async putOwnerPasswordByIdHandler(request, h) {
-    this._validator.validateOwnerPasswordPayload(request.payload);
-    const { id } = request.params;
+    const {
+      oldPassword,
+      newPassword,
+    } = request.payload;
 
-    await this._service.editPasswordById(id, request.payload);
+    await this._validator.validateOwnerPasswordPayload({
+      oldPassword,
+      newPassword,
+    });
+    // const { id } = request.params;
+    const { id: credentialId } = request.auth.credentials;
+
+    await this._service.editPasswordById(credentialId, {
+      oldPassword,
+      newPassword,
+    });
 
     const response = h.response({
       status: 'success',
@@ -66,6 +78,21 @@ class OwnersHandler {
     });
 
     response.code(201);
+    return response;
+  }
+
+  async getOwnerByIdHandler(request, h) {
+    const { id: credentialId } = request.auth.credentials;
+    const owner = await this._service.getOwnerById(credentialId);
+
+    const response = h.response({
+      status: 'success',
+      data: {
+        owner,
+      },
+    });
+
+    response.code(200);
     return response;
   }
 }
