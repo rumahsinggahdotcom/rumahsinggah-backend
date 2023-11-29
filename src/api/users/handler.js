@@ -69,6 +69,30 @@ class UsersHandler {
     return response;
   }
 
+  async putUserPasswordByIdHandler(request, h) {
+    const {
+      oldPassword,
+      newPassword,
+    } = request.payload;
+
+    const { id: credentialId } = request.auth.credentials;
+
+    // await this.validator.
+
+    await this._service.editUserPasswordById(credentialId, {
+      oldPassword,
+      newPassword,
+    });
+
+    const response = h.response({
+      status: 'success',
+      message: 'Password berhasil diganti',
+    });
+
+    response.code(200);
+    return response;
+  }
+
   async getUsersByKosIdHandler(request, h) {
     const { kosId } = request.params;
     const users = await this._service.getUsersByKosId(kosId);

@@ -25,4 +25,15 @@ const EditUsersPayloadSchema = Joi.object({
   gender: Joi.string().valid('Perempuan', 'Laki-Laki'),
 });
 
-module.exports = { UsersPayloadSchema, EditUsersPayloadSchema };
+const UsersPasswordPayloadSchema = Joi.object({
+  oldPassword: Joi.string().regex(/(?=.*[a-z])[A-Za-z\d$@$!%*?&.]{8,20}/)
+    .required()
+    .min(8)
+    .max(20),
+  newPassword: Joi.string().regex(/(?=.*[a-z])[A-Za-z\d$@$!%*?&.]{8,20}/)
+    .required()
+    .min(8)
+    .max(20),
+});
+
+module.exports = { UsersPayloadSchema, EditUsersPayloadSchema, UsersPasswordPayloadSchema };
