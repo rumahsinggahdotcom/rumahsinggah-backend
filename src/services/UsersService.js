@@ -31,8 +31,25 @@ class UsersService {
     if (!result.rows.length) {
       throw new InvariantError('User failed to add');
     }
-    console.log('testing github');
     return result.rows[0].id;
+  }
+
+  async editUserById(id, {
+    fullname,
+    phoneNumber,
+    address,
+    gender,
+  }) {
+    const query = {
+      text: 'UPDATE users SET fullname = $2, phone_number = $3, address = $4, gender = $5 WHERE id = $1 RETURNING id',
+      values: [id, fullname, phoneNumber, address, gender],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows[0].id) {
+      throw new InvariantError('Gagal memperbarui user. User tidak ditemukan');
+    }
   }
 
   async verifyNewUser(username, phoneNumber) {
@@ -57,6 +74,21 @@ class UsersService {
 
     if (!rows.length) {
       throw new InvariantError('User Tidak Ditemukan.');
+    }
+
+    return rows.map(mapDBToModel);
+  }
+
+  async getUserById(id) {
+    const query = {
+      text: 'SELECT id, fullname, username, phone_number, address, gender FROM users WHERE id = $1',
+      values: [id],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows.length) {
+      throw new InvariantError('User tidak ditemukan.');
     }
 
     return rows.map(mapDBToModel);

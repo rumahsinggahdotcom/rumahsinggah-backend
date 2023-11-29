@@ -15,4 +15,14 @@ const UsersPayloadSchema = Joi.object({
   gender: Joi.string().valid('Perempuan', 'Laki-Laki'),
 });
 
-module.exports = { UsersPayloadSchema };
+const EditUsersPayloadSchema = Joi.object({
+  fullname: Joi.string().required(),
+  phoneNumber: Joi.string().pattern(/^\d+$/)
+    .min(8)
+    .max(13)
+    .required(),
+  address: Joi.string().required(),
+  gender: Joi.string().valid('Perempuan', 'Laki-Laki'),
+});
+
+module.exports = { UsersPayloadSchema, EditUsersPayloadSchema };

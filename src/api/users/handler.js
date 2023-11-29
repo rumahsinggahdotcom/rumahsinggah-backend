@@ -36,6 +36,39 @@ class UsersHandler {
     return response;
   }
 
+  async putUserByIdHandler(request, h) {
+    const {
+      fullname,
+      phoneNumber,
+      address,
+      gender,
+    } = request.payload;
+
+    const { id: credentialId } = request.auth.credentials;
+
+    await this._validator.validateEditUserPayload({
+      fullname,
+      phoneNumber,
+      address,
+      gender,
+    });
+
+    await this._service.editUserById(credentialId, {
+      fullname,
+      phoneNumber,
+      address,
+      gender,
+    });
+
+    const response = h.response({
+      status: 'success',
+      message: 'User berhasil diedit',
+    });
+
+    response.code(200);
+    return response;
+  }
+
   async getUsersByKosIdHandler(request, h) {
     const { kosId } = request.params;
     const users = await this._service.getUsersByKosId(kosId);
@@ -44,6 +77,21 @@ class UsersHandler {
       status: 'success',
       data: {
         users,
+      },
+    });
+
+    response.code(200);
+    return response;
+  }
+
+  async getUserByIdHandler(request, h) {
+    const { id: credentialId } = request.auth.credentials;
+    const user = await this._service.getUserById(credentialId);
+
+    const response = h.response({
+      status: 'success',
+      data: {
+        user,
       },
     });
 

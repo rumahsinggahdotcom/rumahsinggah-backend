@@ -1,13 +1,21 @@
 const routes = (handler) => [
   {
     method: 'POST',
-    path: '/users',
+    path: '/user',
     handler: handler.postUserHandler,
   },
   {
     method: 'GET',
-    path: '/users/{kosId}',
+    path: '/user/{kosId}',
     handler: handler.getUsersByKosIdHandler,
+  },
+  {
+    method: 'GET',
+    path: '/user',
+    handler: handler.getUserById,
+    options: {
+      auth: 'kossapp_jwt',
+    },
   },
 ];
 
