@@ -32,7 +32,7 @@ class OwnersHandler {
       phoneNumber,
     } = request.payload;
 
-    const { id: credentialId } = request.auth.params;
+    const { id: credentialId } = request.auth.credentials;
 
     await this._validator.validateEditOwnerPayload({
       fullname,
