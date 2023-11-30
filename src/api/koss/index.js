@@ -7,7 +7,7 @@ module.exports = {
   register: async (server, {
     kossService, storageService, validator,
   }) => {
-    const kosHandler = new KossHandler(kossService, storageService, validator);
-    server.route(kosRoutes(kosHandler));
+    const kossHandler = new KossHandler(kossService, storageService, validator);
+    server.route(kosRoutes(kossHandler));
   },
 };

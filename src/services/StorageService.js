@@ -9,10 +9,8 @@ class StorageService {
     }
   }
 
-  writeFile(file, meta) {
-    const filename = +new Date() + meta.filename;
-    // const filename = '1698908338047figure 10.10.png';
-    const path = `${this._folder}/${filename}`;
+  writeFile(file, filename, section) {
+    const path = `${this._folder}/${section}/${filename}`;
 
     const fileStream = fs.createWriteStream(path);
 
@@ -21,6 +19,11 @@ class StorageService {
       file.pipe(fileStream);
       file.on('end', () => resolve(filename));
     });
+  }
+
+  deleteFile(filename, section) {
+    const path = `${this._folder}/${section}/${filename}`;
+    fs.unlinkSync(path);
   }
 }
 

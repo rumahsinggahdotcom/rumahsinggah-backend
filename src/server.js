@@ -1,5 +1,5 @@
-require('dotenv').config();
 const hapi = require('@hapi/hapi');
+const Jwt = require('@hapi/jwt');
 const path = require('path');
 const ClientError = require('./exceptions/ClientError');
 
@@ -19,19 +19,32 @@ const KossService = require('./services/KossService');
 const KossValidator = require('./validator/koss');
 
 // Room
-const roomApp = require('./api/room');
-const RoomService = require('./services/RoomService');
-const RoomValidator = require('./validator/room');
+const roomApp = require('./api/rooms');
+const RoomsService = require('./services/RoomsService');
+const RoomsValidator = require('./validator/room');
 
 // upload
 const StorageService = require('./services/StorageService');
 
+// Authentications
+const authApp = require('./api/authentications');
+const AuthenticationService = require('./services/AuthenticationsService');
+const AuthenticationsValidator = require('./validator/authentications');
+const TokenManager = require('./tokenize/TokenManager');
+
+// Cache
+const CacheService = require('./services/CacheService');
+
+require('dotenv').config();
+
 const init = async () => {
+  const cacheService = new CacheService();
   const usersService = new UsersService();
   const ownersService = new OwnersService();
-  const kossService = new KossService();
-  const storageService = new StorageService(path.resolve(__dirname, 'api/koss/file'));
-  const roomService = new RoomService();
+  const kossService = new KossService(cacheService);
+  const storageService = new StorageService(path.resolve(__dirname, 'api/file'));
+  const roomsService = new RoomsService(cacheService);
+  const authService = new AuthenticationService();
 
   const server = hapi.server({
     port: process.env.PORT,
@@ -41,6 +54,29 @@ const init = async () => {
         origin: ['*'],
       },
     },
+  });
+
+  // registrasi plugin eksternal
+  await server.register([
+    {
+      plugin: Jwt,
+    },
+  ]);
+
+  server.auth.strategy('kossapp_jwt', 'jwt', {
+    keys: process.env.ACCESS_TOKEN_KEY,
+    verify: {
+      aud: false,
+      iss: false,
+      sub: false,
+      maxAgeSec: process.env.ACCESS_TOKEN_AGE,
+    },
+    validate: (artifacts) => ({
+      isValid: true,
+      credentials: {
+        id: artifacts.decoded.payload.id,
+      },
+    }),
   });
 
   await server.register([
@@ -69,8 +105,20 @@ const init = async () => {
     {
       plugin: roomApp,
       options: {
-        service: roomService,
-        validator: RoomValidator,
+        kossService,
+        roomsService,
+        storageService,
+        validator: RoomsValidator,
+      },
+    },
+    {
+      plugin: authApp,
+      options: {
+        authService,
+        usersService,
+        ownersService,
+        tokenManager: TokenManager,
+        validator: AuthenticationsValidator,
       },
     },
   ]);

@@ -3,6 +3,7 @@ const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const InvariantError = require('../exceptions/InvariantError');
 const NotFoundError = require('../exceptions/NotFoundError');
+const AuthenticationError = require('../exceptions/AuthenticationError');
 const { mapDBToModel } = require('../utils');
 // const AuthenticationError = require('../exceptions/AuthenticationError');
 
@@ -48,7 +49,6 @@ class OwnersService {
     };
 
     const { rows } = await this._pool.query(queryOwner);
-    console.log(rows.map(mapDBToModel)[0]);
 
     if (!rows.length) {
       throw new NotFoundError('Owner tidak ditemukan');
@@ -71,11 +71,12 @@ class OwnersService {
   async editOwnerById(id, {
     fullname,
     address,
+    gender,
     phoneNumber,
   }) {
     const query = {
-      text: 'UPDATE owners SET fullname = $1, address = $2, phone_number = $3 WHERE id = $4 RETURNING id',
-      values: [fullname, address, phoneNumber, id],
+      text: 'UPDATE owners SET fullname = $2, address = $3, gender = $4, phone_number = $5 WHERE id = $1 RETURNING id',
+      values: [id, fullname, address, gender, phoneNumber],
     };
 
     const { rows } = await this._pool.query(query);
@@ -115,7 +116,6 @@ class OwnersService {
     };
 
     const result = await this._pool.query(query);
-    console.log(result);
 
     if (!result.rowCount) {
       throw new NotFoundError('Gagal Mengubah Password. Id tidak ditemukan');
@@ -123,8 +123,27 @@ class OwnersService {
     const { password: hashedPassword } = result.rows[0];
 
     const match = await bcrypt.compare(oldPassword, hashedPassword);
-    console.log('testing purpose match:', match);
     return match;
+  }
+
+  async verifyOwnersCredentials({ username, password }) {
+    const query = {
+      text: 'SELECT id, password FROM owners WHERE username = $1',
+      values: [username],
+    };
+    const result = await this._pool.query(query);
+    // console.log(result);
+    if (!result.rows.length) {
+      throw new AuthenticationError('Kredensial yang anda berikan salah.');
+    }
+    const { id, password: hashedPassword } = result.rows[0];
+    const match = await bcrypt.compare(password, hashedPassword);
+
+    if (!match) {
+      throw new AuthenticationError('Kredensial yang anda berikan salah.');
+    }
+
+    return id;
   }
 }
 

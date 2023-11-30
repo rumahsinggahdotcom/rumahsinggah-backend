@@ -20,6 +20,10 @@ exports.up = (pgm) => {
       type: 'VARCHAR',
       notNull: true,
     },
+    description: {
+      type: 'VARCHAR',
+      notNull: true,
+    },
     rating: {
       type: 'FLOAT',
       notNull: false,

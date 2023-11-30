@@ -3,12 +3,12 @@
 exports.shorthands = undefined;
 
 exports.up = (pgm) => {
-  pgm.createTable('image_koss', {
+  pgm.createTable('image_rooms', {
     id: {
       type: 'VARCHAR',
       primaryKey: true,
     },
-    kos_id: {
+    room_id: {
       type: 'VARCHAR',
       notNull: true,
     },
@@ -18,9 +18,9 @@ exports.up = (pgm) => {
     },
   });
 
-  pgm.addConstraint('image_koss', 'fk_image_koss.kos_id_koss.id', 'FOREIGN KEY (kos_id) REFERENCES koss(id) ON DELETE CASCADE ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED');
+  pgm.addConstraint('image_rooms', 'fk_image_rooms.room_id_rooms.id', 'FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE ON UPDATE CASCADE DEFERRABLE INITIALLY DEFERRED');
 };
 
 exports.down = (pgm) => {
-  pgm.dropTable('image_koss');
+  pgm.dropTable('image_rooms');
 };

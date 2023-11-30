@@ -1,116 +1,275 @@
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
+const path = require('path');
 const InvariantError = require('../exceptions/InvariantError');
 const NotFoundError = require('../exceptions/NotFoundError');
+const AuthenticationError = require('../exceptions/AuthenticationError');
 const { mapDBToModel } = require('../utils');
+const StorageService = require('./StorageService');
 
 class KossService {
-  constructor() {
+  constructor(cacheService) {
     this._pool = new Pool();
+    this._storageService = new StorageService(path.resolve(__dirname, '../api/file'));
+    this._cacheService = cacheService;
   }
 
   async addKos({
     ownerId,
     name,
     address,
-  }) {
-    console.log(ownerId, name, address);
+    description,
+  }, arrayImgs) {
     const id = `koss-${nanoid(16)}`;
-    const query = {
-      text: 'INSERT INTO koss values($1, $2, $3, $4, $5) RETURNING id',
-      values: [id, ownerId, name, address, null],
-    };
 
-    const { rows } = await this._pool.query(query);
+    const client = await this._pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('SET CONSTRAINTS ALL DEFERRED');
+      const query = {
+        text: 'INSERT INTO koss values($1, $2, $3, $4, $5, $6) RETURNING id',
+        values: [id, ownerId, name, address, description, null],
+      };
+      const { rows } = await client.query(query);
+      if (!rows[0].id) {
+        throw new InvariantError('Kos Gagal Ditambahkan.');
+      }
+      const kosId = rows[0].id;
 
-    if (!rows[0].id) {
-      throw new InvariantError('Kos Gagal Ditambahkan.');
+      if (arrayImgs.length > 0) {
+        await Promise.all(arrayImgs.map(async (image) => {
+          await this.storeImgKossToStorageDb(kosId, image, { client });
+        }));
+      }
+      await client.query('COMMIT');
+      await this._cacheService.delete('koss');
+      await this._cacheService.delete(`kosId:${id}`);
+      await this._cacheService.delete(`ownerkoss:${ownerId}`);
+      return rows[0].id;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw new InvariantError(error.message);
     }
-
-    return rows[0].id;
   }
 
-  async addImageKos(url, kosId) {
-    const id = `image_koss-${nanoid(16)}`;
+  async addImageKos(id, arrayImgs, ownerId) {
+    const imgsId = [];
+    const client = await this._pool.connect();
+    try {
+      await client.query('BEGIN');
 
-    const query = {
+      if (arrayImgs.length > 0) {
+        await Promise.all(arrayImgs.map(async (image) => {
+          const imgId = await this.storeImgKossToStorageDb(id, image, { client });
+          imgsId.push(imgId);
+        }));
+      }
+      await client.query('COMMIT');
+      await this._cacheService.delete('koss');
+      await this._cacheService.delete(`kosId:${id}`);
+      await this._cacheService.delete(`ownerkoss:${ownerId}`);
+
+      return imgsId;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw new InvariantError(error.message);
+    }
+  }
+
+  async storeImgKossToStorageDb(kosId, image, { client = this._pool } = {}) {
+    const kosQuery = {
+      text: 'SELECT owner_id, name FROM koss where id = $1',
+      values: [kosId],
+    };
+    const resultKos = await client.query(kosQuery);
+    const kosOwnerId = resultKos.rows[0].owner_id;
+    const kosName = resultKos.rows[0].name;
+    const filename = `${kosOwnerId}_${kosName}_${image.hapi.filename}`;
+
+    const id = `img_kos-${nanoid(16)}`;
+    const imgKosQuery = {
       text: 'INSERT INTO image_koss values($1, $2, $3) RETURNING id',
-      values: [id, kosId, url],
+      values: [id, kosId, filename],
     };
 
-    const { rows } = await this._pool.query(query);
-
-    if (!rows[0].id) {
+    const resImgKos = await client.query(imgKosQuery);
+    if (!resImgKos.rows[0].id) {
       throw new InvariantError('Image Kos Gagal Ditambahkan.');
     }
 
-    return rows[0].id;
+    await this._storageService.writeFile(image, filename, 'koss');
+    return resImgKos.rows[0].id;
   }
 
   async getKoss() {
-    const query = {
-      text: 'SELECT k.id, k.name, k.owner_id, k.address, i.images FROM koss AS k LEFT JOIN image_koss AS i ON k.id = i.kos_id',
-    };
-    const { rows } = await this._pool.query(query);
-    console.log('result:', rows);
-    const groupedData = rows.reduce((result, item) => {
-      const existingItem = result.find((groupedItem) => groupedItem.id === item.id);
+    try {
+      const koss = await this._cacheService.get('koss');
+      return {
+        koss,
+        isCache: 1,
+      };
+    } catch (error) {
+      const query = {
+        text: 'SELECT k.id, k.owner_id, k.name, k.address, k.description, k.rating, i.image FROM koss AS k LEFT JOIN image_koss AS i ON k.id = i.kos_id',
+      };
 
-      if (existingItem) {
-        existingItem.images.push({ image: item.images });
-      } else {
-        result.push({
-          id: item.id,
-          name: item.name,
-          owner_id: item.owner_id,
-          address: item.address,
-          images: [{ image: item.images }],
-        });
-      }
+      const { rows } = await this._pool.query(query);
 
-      return result;
-    }, []);
+      const groupedData = rows.reduce((result, item) => {
+        const existingItem = result.find((groupedItem) => groupedItem.id === item.id);
 
-    return groupedData.map(mapDBToModel);
+        if (existingItem) {
+          existingItem.image.push({ image: item.image });
+        } else {
+          result.push({
+            id: item.id,
+            owner_id: item.owner_id,
+            name: item.name,
+            address: item.address,
+            description: item.description,
+            rating: item.rating,
+            image: [{ image: item.image }],
+          });
+        }
+
+        return result;
+      }, []);
+
+      const koss = groupedData.map(mapDBToModel);
+      await this._cacheService.set('koss', JSON.stringify(koss));
+
+      return { koss };
+    }
   }
 
   async getKosById(kosId) {
-    const queryImageKos = {
-      text: 'SELECT id as image_id, images FROM image_koss WHERE kos_id = $1',
-      values: [kosId],
-    };
-    const resultImageKos = await this._pool.query(queryImageKos);
+    try {
+      const kos = await this._cacheService.get(`kosId:${kosId}`);
+      return {
+        kos,
+        isCache: 1,
+      };
+    } catch (error) {
+      const queryImageKos = {
+        text: 'SELECT id as image_id, image FROM image_koss WHERE kos_id = $1',
+        values: [kosId],
+      };
+      const resultImageKos = await this._pool.query(queryImageKos);
 
-    const queryKos = {
-      text: 'SELECT * FROM koss where id = $1',
-      values: [kosId],
-    };
-    const resultKos = await this._pool.query(queryKos);
-    if (!resultKos.rows) {
-      throw new NotFoundError('Kos Tidak Ditemukan.');
+      const queryKos = {
+        text: 'SELECT * FROM koss where id = $1',
+        values: [kosId],
+      };
+      const resultKos = await this._pool.query(queryKos);
+      if (!resultKos.rows) {
+        throw new NotFoundError('Kos Tidak Ditemukan.');
+      }
+      const kos = resultKos.rows[0];
+      kos.image = resultImageKos.rows;
+
+      await this._cacheService.set(`kosId:${kosId}`, JSON.stringify(kos));
+      return { kos };
     }
-    const kos = resultKos.rows[0];
-    kos.image = resultImageKos.rows;
-
-    return kos;
   }
 
-  async editKosById(kossId, {
+  async editKosById(id, {
     name,
     address,
+    description,
   }) {
     const query = {
-      text: 'UPDATE koss SET name = $2, address = $3 WHERE id = $1',
-      values: [kossId, name, address],
+      text: 'UPDATE koss SET name = $2, address = $3, description = $4 WHERE id = $1 RETURNING id, owner_id',
+      values: [id, name, address, description],
     };
 
     const { rows } = await this._pool.query(query);
+    if (!rows[0].id) {
+      throw new InvariantError('Gagal memperbarui Kos. Id tidak ditemukan.');
+    }
+    await this._cacheService.delete('koss');
+    await this._cacheService.delete(`kosId:${id}`);
+    await this._cacheService.delete(`ownerkoss:${rows[0].owner_id}`);
+  }
+
+  async delImageKosById(id, imageId) {
+    const query = {
+      text: 'DELETE FROM image_koss WHERE kos_id = $1 AND id = $2 RETURNING id, image',
+      values: [id, imageId],
+    };
+
+    const { rows } = await this._pool.query(query);
+    const filename = rows[0].image;
 
     if (!rows[0].id) {
-      throw new NotFoundError('Gagal Memperbarui Koss. Id Tidak Ditemukan.');
+      throw new NotFoundError('Image gagal dihapus. Id tidak ditemukan');
+    }
+    await this._cacheService.delete('koss');
+    await this._cacheService.delete(`kosId:${id}`);
+    return filename;
+  }
+
+  async getOwnerKoss({ owner }) {
+    try {
+      const koss = await this._cacheService.get(`ownerkoss:${owner}`);
+      return {
+        ownerKoss: koss,
+        isCache: 1,
+      };
+    } catch (error) {
+      const query = {
+        text: 'SELECT k.id, k.owner_id, k.name, k.address, k.description, k.rating, i.image FROM koss as k LEFT JOIN image_koss as i ON k.id = i.kos_id WHERE k.owner_id = $1',
+        values: [owner],
+      };
+
+      const { rows } = await this._pool.query(query);
+
+      if (!rows.length) {
+        throw new InvariantError('Kos tidak ditemukan');
+      }
+
+      const groupedData = rows.reduce((result, item) => {
+        const existingItem = result.find((resultData) => resultData.id === item.id);
+        if (existingItem) {
+          existingItem.image.push({ image: item.image });
+        } else {
+          result.push({
+            id: item.id,
+            owner_id: item.owner_id,
+            name: item.name,
+            address: item.address,
+            description: item.description,
+            rating: item.rating,
+            image: [{ image: item.image }],
+          });
+        }
+
+        return result;
+      }, []);
+
+      await this._cacheService.set(`ownerkoss:${owner}`, JSON.stringify(groupedData));
+
+      return { ownerKoss: groupedData };
+    }
+  }
+
+  async verifyKosAccess(id, credentialId) {
+    console.log(id, credentialId);
+    const query = {
+      text: 'SELECT id, owner_id FROM koss WHERE id = $1',
+      values: [id],
+    };
+
+    const { rows } = await this._pool.query(query);
+    console.log(rows);
+    if (!rows.length) {
+      throw new InvariantError('Kos tidak ditemukan');
     }
 
-    return rows[0].id;
+    const kos = rows[0];
+
+    if (kos.owner_id !== credentialId) {
+      throw new AuthenticationError('Anda tidak berhak mengakses resource ini.');
+    }
   }
 }
 

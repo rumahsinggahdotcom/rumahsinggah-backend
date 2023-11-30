@@ -1,4 +1,5 @@
 const autobind = require('auto-bind');
+const { assignImageToArray } = require('../../utils');
 
 class KossHandler {
   constructor(kossService, storageService, validator) {
@@ -9,25 +10,38 @@ class KossHandler {
   }
 
   async postKosHandler(request, h) {
-    console.log(request.payload);
-    const { images } = request.payload;
     const {
-      ownerId,
+      // ownerId,
       name,
       address,
+      description,
     } = request.payload;
 
-    await this._validator.validateKosPayload({ ownerId, name, address });
-    const kosId = await this._kossService.addKos({ ownerId, name, address });
+    const { images } = request.payload;
+    const { id: credentialId } = request.auth.credentials;
+    const arrayImgs = assignImageToArray(images);
 
-    if (images) {
-      await Promise.all(images.map(async (image) => {
+    // Validate Kos Payload
+    await this._validator.validateKosPayload({
+      ownerId: credentialId,
+      name,
+      address,
+      description,
+    });
+
+    // Validate Image Kos Payload
+    if (arrayImgs.length > 1) {
+      await Promise.all(arrayImgs.map(async (image) => {
         await this._validator.validateImageKosPayload(image.hapi.headers);
-        const filename = await this._storageService.writeFile(image, image.hapi);
-        const url = `http://${process.env.HOST}:${process.env.PORT}/file/image/${filename}`;
-        await this._kossService.addImageKos(url, kosId);
       }));
     }
+
+    const kosId = await this._kossService.addKos({
+      ownerId: credentialId,
+      name,
+      address,
+      description,
+    }, arrayImgs);
 
     const response = h.response({
       status: 'success',
@@ -41,23 +55,50 @@ class KossHandler {
     return response;
   }
 
-  async getKossHandler(request, h) {
-    const koss = await this._kossService.getKoss();
+  async postKosImagesHandler(request, h) {
+    const { kosId, images } = request.payload;
+    const arrayImgs = assignImageToArray(images);
+    const { id: credentialId } = request.auth.credentials;
+
+    await this._kossService.verifyKosAccess(kosId, credentialId);
+
+    if (arrayImgs.length > 0) {
+      await Promise.all(arrayImgs.map(async (image) => {
+        await this._validator.validateImageKosPayload(image);
+      }));
+    }
+    const imgsId = await this._kossService.addImageKos(kosId, arrayImgs, credentialId);
 
     const response = h.response({
       status: 'success',
+      message: 'Image Kos berhasil ditambahkan',
       data: {
-        koss,
+        imgsId,
       },
     });
 
+    response.code(201);
+    return response;
+  }
+
+  async getKossHandler(request, h) {
+    const { koss, isCache } = await this._kossService.getKoss();
+
+    const response = h.response({
+      status: 'success',
+      data: koss,
+    });
+
+    if (isCache) {
+      response.header('X-Data-Source', 'cache');
+    }
     response.code(200);
     return response;
   }
 
   async getKosByIdHandler(request, h) {
     const { id } = request.params;
-    const kos = await this._kossService.getKosById(id);
+    const { kos, isCache } = await this._kossService.getKosById(id);
 
     const response = h.response({
       status: 'success',
@@ -66,20 +107,66 @@ class KossHandler {
       },
     });
 
+    if (isCache) {
+      response.header('X-Data-Source', 'cache');
+    }
+
+    response.code(200);
+    return response;
+  }
+
+  async getOwnerKossHandler(request, h) {
+    const { id: credentialId } = request.auth.credentials;
+    const { ownerKoss, isCache } = await this._kossService.getOwnerKoss({ owner: credentialId });
+
+    const response = h.response({
+      status: 'success',
+      data: {
+        ownerKoss,
+      },
+    });
+
+    if (isCache) {
+      response.header('X-Data-Source', 'cache');
+    }
+
     response.code(200);
     return response;
   }
 
   async putKosByIdHandler(request, h) {
-    await this._validator.validateKosPayload(request.payload);
-
     const { id } = request.params;
+    const { name, address, description } = request.payload;
+    const { id: credentialId } = request.auth.credentials;
 
-    await this._kossService.editKosById(id, request.payload);
+    await this._kossService.verifyKosAccess(id, credentialId);
+
+    // Validate Kos Payload
+    await this._validator.validateKosPayload({ name, address, description });
+    await this._kossService.editKosById(id, { name, address, description });
 
     const response = h.response({
       status: 'success',
       message: 'Kos Berhasil Diedit',
+    });
+
+    response.code(200);
+    return response;
+  }
+
+  async delImageKosByIdHandler(request, h) {
+    const { id, imageId } = request.params;
+    const { id: credentialId } = request.auth.credentials;
+    // const { imageId } = request.payload;
+
+    await this._kossService.verifyKosAccess(id, credentialId);
+
+    const filename = await this._kossService.delImageKosById(id, imageId);
+    await this._storageService.deleteFile(filename, 'koss');
+
+    const response = h.response({
+      status: 'success',
+      message: 'Image berhasil dihapus.',
     });
 
     response.code(200);

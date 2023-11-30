@@ -1,10 +1,14 @@
 /* eslint-disable camelcase */
 
 exports.up = (pgm) => {
-  pgm.createTable('room', {
+  pgm.createTable('rooms', {
     id: {
       type: 'VARCHAR',
       primaryKey: true,
+    },
+    kos_id: {
+      type: 'VARCHAR',
+      notNull: true,
     },
     type: {
       type: 'VARCHAR',
@@ -18,19 +22,19 @@ exports.up = (pgm) => {
       type: 'INTEGER',
       notNull: true,
     },
-    kos_id: {
-      type: 'VARCHAR',
-      notNull: true,
-    },
     quantity: {
       type: 'INTEGER',
       notNull: true,
     },
+    description: {
+      type: 'VARCHAR',
+      notNull: true,
+    },
   });
 
-  pgm.addConstraint('room', 'fk_room.kos_id_koss.id', 'FOREIGN KEY (kos_id) REFERENCES koss(id) ON DELETE CASCADE');
+  pgm.addConstraint('rooms', 'fk_rooms.kos_id_koss.id', 'FOREIGN KEY (kos_id) REFERENCES koss(id) ON DELETE CASCADE');
 };
 
 exports.down = (pgm) => {
-  pgm.dropTable('room');
+  pgm.dropTable('rooms');
 };

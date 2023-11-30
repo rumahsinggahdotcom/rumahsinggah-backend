@@ -6,18 +6,27 @@ const ownerRoutes = (handler) => [
   },
   {
     method: 'GET',
-    path: '/owner/{id}',
+    path: '/owner',
     handler: handler.getOwnerByIdHandler,
+    options: {
+      auth: 'kossapp_jwt',
+    },
   },
   {
     method: 'PUT',
-    path: '/owner/{id}',
+    path: '/owner',
     handler: handler.putOwnerByIdHandler,
+    options: {
+      auth: 'kossapp_jwt',
+    },
   },
   {
     method: 'PUT',
-    path: '/owner/{id}/changepassword',
+    path: '/owner/changepassword',
     handler: handler.putOwnerPasswordByIdHandler,
+    options: {
+      auth: 'kossapp_jwt',
+    },
   },
 ];
 

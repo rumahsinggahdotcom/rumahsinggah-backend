@@ -3,30 +3,57 @@ const mapDBToModel = ({
   id,
   owner_id,
   user_id,
+  kos_id,
   name,
   rating,
+  description,
   fullname,
   username,
   password,
   address,
   gender,
   phone_number,
-  images,
+  type,
+  max_people,
+  price,
+  quantity,
+  image,
 }) => ({
   id,
   ownerId: owner_id,
   userId: user_id,
+  kosId: kos_id,
   name,
   rating,
+  description,
   fullname,
   username,
   password,
   address,
   gender,
   phoneNumber: phone_number,
-  images,
+  type,
+  maxPeople: max_people,
+  price,
+  quantity,
+  image,
 });
 
-// const map
+/* assign images payload to array */
+const assignImageToArray = (images) => {
+  // console.log(images._data.length);
+  // if (!isEmpty(images._data.length)) {
+  //   console.log('eyy');
+  // }
+  // console.log(images.length);
+  // console.log(images._data.length);
+  let arrayImgs = [];
+  if (!Array.isArray(images)) {
+    if (images._data.length > 0) arrayImgs.push(images);
+  } else {
+    arrayImgs = images;
+  }
+  return arrayImgs;
+};
 
-module.exports = { mapDBToModel };
+module.exports = { mapDBToModel, assignImageToArray };
