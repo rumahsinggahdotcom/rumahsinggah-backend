@@ -14,6 +14,21 @@ const routes = (handler) => [
     path: '/owner/authentications',
     handler: handler.deleteOwnersAuthHandler,
   },
+  {
+    method: 'POST',
+    path: '/user/authentications',
+    handler: handler.postUsersAuthHandler,
+  },
+  {
+    method: 'PUT',
+    path: '/user/authentications',
+    handler: handler.putUsersAuthHandler,
+  },
+  {
+    method: 'DELETE',
+    path: '/user/authentications',
+    handler: handler.deleteUsersAuthHandler,
+  },
 ];
 
 module.exports = routes;

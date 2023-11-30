@@ -12,7 +12,7 @@ const routes = (handler) => [
   {
     method: 'GET',
     path: '/user',
-    handler: handler.getUserById,
+    handler: handler.getUserByIdHandler,
     options: {
       auth: 'kossapp_jwt',
     },

@@ -76,10 +76,10 @@ class UsersService {
       throw new InvariantError('Gagal Mengubah Password. Kredensial yang anda berikan salah');
     }
 
-    const newHashedPassword = bcrypt.hash(newPassword, 10);
+    const newHashedPassword = await bcrypt.hash(newPassword, 10);
 
     const query = {
-      text: 'UPDATE users SET password = $2 WHERE id = 1 RETURNING id',
+      text: 'UPDATE users SET password = $2 WHERE id = $1 RETURNING id',
       values: [id, newHashedPassword],
     };
 
@@ -135,6 +135,28 @@ class UsersService {
     }
 
     return rows.map(mapDBToModel);
+  }
+
+  async verifyUsersCredentials({ username, password }) {
+    const query = {
+      text: 'SELECT id, password FROM users WHERE username = $1',
+      values: [username],
+    };
+
+    const { rows } = await this._pool.query(query);
+    if (!rows.length) {
+      throw new InvariantError('Kredensial yang anda berikan salah.');
+    }
+
+    const { id, password: hashedPassword } = rows[0];
+
+    const match = bcrypt.compare(password, hashedPassword);
+
+    if (!match) {
+      throw new InvariantError('Kredensial yang anda berikan salah');
+    }
+
+    return id;
   }
 }
 

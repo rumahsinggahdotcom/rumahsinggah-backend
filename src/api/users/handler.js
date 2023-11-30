@@ -19,7 +19,7 @@ class UsersHandler {
       gender,
     } = request.payload;
 
-    await this._service.addUser({
+    const id = await this._service.addUser({
       fullname,
       username,
       password,
@@ -31,6 +31,9 @@ class UsersHandler {
     const response = h.response({
       status: 'success',
       message: 'User added successfully',
+      data: {
+        id,
+      },
     });
     response.code(201);
     return response;
@@ -79,7 +82,7 @@ class UsersHandler {
 
     // await this.validator.
 
-    await this._service.editUserPasswordById(credentialId, {
+    await this._service.editPasswordById(credentialId, {
       oldPassword,
       newPassword,
     });
