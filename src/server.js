@@ -1,6 +1,7 @@
 const hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
 const path = require('path');
+const mongodb = require('hapi-mongodb');
 const ClientError = require('./exceptions/ClientError');
 
 // Owners
@@ -62,6 +63,18 @@ const init = async () => {
       plugin: Jwt,
     },
   ]);
+
+  // configure hapi-mongodb connection
+  server.register({
+    plugin: mongodb,
+    options: {
+      uri: 'mongodb+srv://{YOUR-USERNAME}:{YOUR-PASSWORD}@main.zxsxp.mongodb.net/sample_mflix?retryWrites=true&w=majority',
+    },
+    settings: {
+      useUnifiedTopology: true,
+    },
+    decorate: true,
+  });
 
   server.auth.strategy('kossapp_jwt', 'jwt', {
     keys: process.env.ACCESS_TOKEN_KEY,
