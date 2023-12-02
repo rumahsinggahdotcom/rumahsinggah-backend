@@ -1,7 +1,8 @@
 const hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
 const path = require('path');
-const Mongoose = require('mongoose');
+// const Mongoose = require('mongoose');
+// const { MongoClient } = require('mongodb');
 const mongodb = require('hapi-mongodb');
 const ClientError = require('./exceptions/ClientError');
 
@@ -39,6 +40,22 @@ const CacheService = require('./services/CacheService');
 
 require('dotenv').config();
 
+// let db;
+
+// const connectToMongo = async () => {
+//   const client = new MongoClient('mongodb+srv://brillianitaaa:SJUN4FDLPfETnczI@cluster0.693knwt.mongodb.net/');
+//   await client.connect();
+//   console.log('Connected to MongoDB');
+//   db = client.db('rumahsinggahdotcom');
+// };
+
+// const getDb = () => {
+//   if (!db) {
+//     throw Error('Database not initialized');
+//   }
+//   return db;
+// };
+
 const init = async () => {
   const cacheService = new CacheService();
   const usersService = new UsersService();
@@ -59,6 +76,8 @@ const init = async () => {
     },
   });
 
+  // await connectToMongo();
+
   // await Mongoose
   //   .connect(`mongodb://${process.env.MONGOUSER}:${process.env.MONGOPASSWORD}/${process.env.MONGODATABASE}`)
   //   // .connect('mongodb://localhost:27017/rumahsinggahdotcom')
@@ -77,14 +96,14 @@ const init = async () => {
   ]);
 
   // configure hapi-mongodb connection
-  server.register({
+  await server.register({
     plugin: mongodb,
     options: {
-      uri: `mongodb+srv://${process.env.MONGOUSER}:${process.env.MONGOPASSWORD}@main.zxsxp.mongodb.net/${process.env.MONGODATABASE}?retryWrites=true&w=majority`,
-      // url: `mongodb://${process.env.MONGOUSER}:${process.env.MONGOPASSWORD}/${process.env.MONGODATABASE}`,
+      url: 'mongodb+srv://brillianitaaa:SJUN4FDLPfETnczI@cluster0.693knwt.mongodb.net/',
     },
     settings: {
       useUnifiedTopology: true,
+      useNewUrlParser: true,
     },
     decorate: true,
   });
