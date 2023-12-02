@@ -1,6 +1,7 @@
 const hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
 const path = require('path');
+const Mongoose = require('mongoose');
 const mongodb = require('hapi-mongodb');
 const ClientError = require('./exceptions/ClientError');
 
@@ -46,6 +47,7 @@ const init = async () => {
   const storageService = new StorageService(path.resolve(__dirname, 'api/file'));
   const roomsService = new RoomsService(cacheService);
   const authService = new AuthenticationService();
+  // const mongoose = new Mongoose();
 
   const server = hapi.server({
     port: process.env.PORT,
@@ -56,6 +58,16 @@ const init = async () => {
       },
     },
   });
+
+  // await Mongoose
+  //   .connect(`mongodb://${process.env.MONGOUSER}:${process.env.MONGOPASSWORD}/${process.env.MONGODATABASE}`)
+  //   // .connect('mongodb://localhost:27017/rumahsinggahdotcom')
+  //   .then(() => {
+  //     console.log('db started!');
+  //   })
+  //   .catch((e) => {
+  //     console.log(e);
+  //   });
 
   // registrasi plugin eksternal
   await server.register([
@@ -68,7 +80,8 @@ const init = async () => {
   server.register({
     plugin: mongodb,
     options: {
-      uri: 'mongodb+srv://{YOUR-USERNAME}:{YOUR-PASSWORD}@main.zxsxp.mongodb.net/sample_mflix?retryWrites=true&w=majority',
+      uri: `mongodb+srv://${process.env.MONGOUSER}:${process.env.MONGOPASSWORD}@main.zxsxp.mongodb.net/${process.env.MONGODATABASE}?retryWrites=true&w=majority`,
+      // url: `mongodb://${process.env.MONGOUSER}:${process.env.MONGOPASSWORD}/${process.env.MONGODATABASE}`,
     },
     settings: {
       useUnifiedTopology: true,
