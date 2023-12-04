@@ -1,7 +1,7 @@
 const hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
 const path = require('path');
-const Mongoose = require('mongoose');
+// const Mongoose = require('mongoose');
 const mongodb = require('hapi-mongodb');
 const ClientError = require('./exceptions/ClientError');
 
