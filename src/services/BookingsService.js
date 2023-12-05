@@ -1,0 +1,36 @@
+const { Pool } = require('pg');
+const nanoid = require('nanoid');
+const InvariantError = require('../exceptions/InvariantError');
+
+class BookingService {
+  constructor() {
+    this._pool = new Pool();
+  }
+
+  async postUsersBooking({
+    roomId,
+    userId,
+    ownerId,
+    start,
+    end,
+    totalPrice,
+    status,
+  }) {
+    const id = `booking_${nanoid(16)}`;
+
+    const query = {
+      text: 'INSERT INTO bookings values($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
+      values: [id, roomId, userId, ownerId, start, end, totalPrice, status],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows[0].id) {
+      throw new InvariantError('Gagal melakukan booking');
+    }
+
+    return rows[0].id;
+  }
+}
+
+module.exports = BookingService;
