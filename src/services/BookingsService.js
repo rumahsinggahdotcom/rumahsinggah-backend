@@ -31,6 +31,21 @@ class BookingService {
 
     return rows[0].id;
   }
+
+  async getBookingsByOwnerId(ownerId) {
+    const query = {
+      text: 'SELECT b.room_id, b.start, b.end, b.total_price, u.fullname FROM bookings as b LEFT JOIN users as u on b.user_id = u.id WHERE b.owner_id = $1',
+      values: [ownerId],
+    };
+
+    const { rows } = this._pool.query(query);
+
+    if (!rows.length) {
+      throw new InvariantError('Gagal menampilkan list bookings.');
+    }
+
+    return rows;
+  }
 }
 
 module.exports = BookingService;

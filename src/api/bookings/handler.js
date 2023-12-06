@@ -51,6 +51,21 @@ class BookingsHandler {
 
     return response;
   }
+
+  async getBookingsByOwnerIdHandler(request, h) {
+    const { id: credentialId } = request.auth.credentials;
+    const bookings = this._service.getBookingsByOwnerId(credentialId);
+
+    const response = h.response({
+      status: 'success',
+      data: {
+        bookings,
+      },
+    });
+
+    response.code(200);
+    return response;
+  }
 }
 
 module.exports = BookingsHandler;
