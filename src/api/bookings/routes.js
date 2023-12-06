@@ -12,6 +12,11 @@ const routes = (handler) => [
       auth: 'kossapp_jwt',
     },
   },
+  {
+    method: 'GET',
+    path: '/koss/booking/{id}',
+    handler: handler.getBookingByIdHandler,
+  },
 ];
 
 module.exports = routes;

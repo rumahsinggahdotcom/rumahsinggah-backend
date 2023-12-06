@@ -66,6 +66,21 @@ class BookingsHandler {
     response.code(200);
     return response;
   }
+
+  async getBookingByIdHandler(request, h) {
+    const { id } = request.params;
+    const booking = this._service.getBookingById(id);
+
+    const response = h.response({
+      status: 'success',
+      data: {
+        booking,
+      },
+    });
+
+    response.code(200);
+    return response;
+  }
 }
 
 module.exports = BookingsHandler;

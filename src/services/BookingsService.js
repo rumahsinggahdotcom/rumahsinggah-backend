@@ -1,6 +1,7 @@
 const { Pool } = require('pg');
 const nanoid = require('nanoid');
 const InvariantError = require('../exceptions/InvariantError');
+const NotFoundError = require('../exceptions/NotFoundError');
 
 class BookingService {
   constructor() {
@@ -41,7 +42,22 @@ class BookingService {
     const { rows } = this._pool.query(query);
 
     if (!rows.length) {
-      throw new InvariantError('Gagal menampilkan list bookings.');
+      throw new NotFoundError('Gagal menampilkan list bookings.');
+    }
+
+    return rows;
+  }
+
+  async getBookingById(id) {
+    const query = {
+      text: 'SELECT * FROM bookings WHERE id = $1',
+      values: [id],
+    };
+
+    const { rows } = this._pool.query(query);
+
+    if (!rows.length) {
+      throw new NotFoundError('Booking tidak ditemukan');
     }
 
     return rows;
