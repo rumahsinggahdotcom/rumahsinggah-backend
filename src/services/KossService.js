@@ -260,9 +260,8 @@ class KossService {
     };
 
     const { rows } = await this._pool.query(query);
-    console.log(rows);
     if (!rows.length) {
-      throw new InvariantError('Kos tidak ditemukan');
+      throw new NotFoundError('Kos tidak ditemukan');
     }
 
     const kos = rows[0];

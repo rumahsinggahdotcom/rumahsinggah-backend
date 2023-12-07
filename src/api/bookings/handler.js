@@ -8,7 +8,7 @@ class BookingsHandler {
     autoBind(this);
   }
 
-  async postUsersBookingHandler(request, h) {
+  async postBookingHandler(request, h) {
     const {
       roomId,
       userId,
@@ -29,7 +29,7 @@ class BookingsHandler {
       status,
     });
 
-    const id = await this._service.postUsersBooking({
+    const id = await this._service.postBooking({
       roomId,
       userId,
       ownerId,
@@ -76,6 +76,23 @@ class BookingsHandler {
       data: {
         booking,
       },
+    });
+
+    response.code(200);
+    return response;
+  }
+
+  async putBookingByIdHandler(request, h) {
+    const { id } = request.params;
+    const { id: credentialId } = request.auth.credentials;
+    const { status } = request.payload;
+
+    await this._service.verifyBookingAccess(id, credentialId);
+    await this._service.putBookingById(id, status);
+
+    const response = h.response({
+      status: 'success',
+      message: 'Update booking berhasil',
     });
 
     response.code(200);

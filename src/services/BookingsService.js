@@ -2,13 +2,15 @@ const { Pool } = require('pg');
 const nanoid = require('nanoid');
 const InvariantError = require('../exceptions/InvariantError');
 const NotFoundError = require('../exceptions/NotFoundError');
+const { mapDBToModel } = require('../utils');
+const AuthenticationError = require('../exceptions/AuthenticationError');
 
 class BookingService {
   constructor() {
     this._pool = new Pool();
   }
 
-  async postUsersBooking({
+  async postBooking({
     roomId,
     userId,
     ownerId,
@@ -45,7 +47,7 @@ class BookingService {
       throw new NotFoundError('Gagal menampilkan list bookings.');
     }
 
-    return rows;
+    return mapDBToModel(rows);
   }
 
   async getBookingById(id) {
@@ -61,6 +63,36 @@ class BookingService {
     }
 
     return rows;
+  }
+
+  async putBookingById(id, status) {
+    const query = {
+      text: 'UPDATE bookings SET status = $2 WHERE id = $1 RETURNING id',
+      values: [id, status],
+    };
+
+    const { rows } = this._pool.query(query);
+
+    if (!rows[0].id) {
+      throw new NotFoundError('Gagal melakukan update. Booking tidak ditemukan.');
+    }
+  }
+
+  async verifyBookingAccess(id, credentialId) {
+    const query = {
+      text: 'SELECT id FROM bookings WHERE owner_id = $1',
+      values: [credentialId],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows.length) {
+      throw new NotFoundError('Booking tidak ditemukan');
+    }
+
+    if (rows[0].id !== id) {
+      throw new AuthenticationError('Anda tidak berhak mengakses resource ini');
+    }
   }
 }
 
