@@ -87,12 +87,53 @@ class BookingsHandler {
     const { id: credentialId } = request.auth.credentials;
     const { status } = request.payload;
 
-    await this._service.verifyBookingAccess(id, credentialId);
+    await this._service.verifyOwnerBookingAccess(id, credentialId);
     await this._service.putBookingById(id, status);
 
     const response = h.response({
       status: 'success',
       message: 'Update booking berhasil',
+    });
+
+    response.code(200);
+    return response;
+  }
+
+  async postMidtransTransactionHandler(request, h) {
+    const {
+      id,
+      start,
+      end,
+      totalPrice,
+      type,
+      fullname,
+      phoneNumber,
+      address,
+    } = request.payload;
+
+    const { id: credentialId } = request.auth.credentials;
+    await this._service.verifyUserBookingAccess(id, credentialId);
+
+    const midtransResponse = await this._service.postMidtransTransaction({
+      id,
+      start,
+      end,
+      totalPrice,
+      type,
+      fullname,
+      phoneNumber,
+      address,
+    });
+
+    const bookingId = await this._service.putBookingById(id, 'complete');
+
+    const response = h.response({
+      status: 'success',
+      message: 'Berhasil melakukan transaksi',
+      data: {
+        bookingId,
+        midtransResponse,
+      },
     });
 
     response.code(200);

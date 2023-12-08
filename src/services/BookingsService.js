@@ -1,13 +1,19 @@
 const { Pool } = require('pg');
 const nanoid = require('nanoid');
+const midtransClient = require('midtrans-client');
+const { mapDBToModel } = require('../utils');
 const InvariantError = require('../exceptions/InvariantError');
 const NotFoundError = require('../exceptions/NotFoundError');
-const { mapDBToModel } = require('../utils');
 const AuthenticationError = require('../exceptions/AuthenticationError');
 
 class BookingService {
   constructor() {
     this._pool = new Pool();
+    this._snap = new midtransClient.Snap({
+      isProduction: false,
+      serverKey: process.env.MIDTRANS_SERVER_KEY,
+      clientKey: process.env.MIDTRANS_CLIENT_KEY,
+    });
   }
 
   async postBooking({
@@ -78,10 +84,10 @@ class BookingService {
     }
   }
 
-  async verifyBookingAccess(id, credentialId) {
+  async verifyUserBookingAccess(id, credentialId) {
     const query = {
-      text: 'SELECT id FROM bookings WHERE owner_id = $1',
-      values: [credentialId],
+      text: 'SELECT id, user_id FROM bookings WHERE id = $1',
+      values: [id],
     };
 
     const { rows } = await this._pool.query(query);
@@ -90,8 +96,58 @@ class BookingService {
       throw new NotFoundError('Booking tidak ditemukan');
     }
 
-    if (rows[0].id !== id) {
+    if (rows[0].user_id !== credentialId) {
       throw new AuthenticationError('Anda tidak berhak mengakses resource ini');
+    }
+  }
+
+  async verifyOwnerBookingAccess(id, credentialId) {
+    const query = {
+      text: 'SELECT id, owner_id FROM bookings WHERE id = $1',
+      values: [id],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows.length) {
+      throw new NotFoundError('Booking tidak ditemukan');
+    }
+
+    if (rows[0].owner_id !== credentialId) {
+      throw new AuthenticationError('Anda tidak berhak mengakses resource ini');
+    }
+  }
+
+  async postMidtransTransaction({
+    id,
+    totalPrice,
+    type,
+    fullname,
+    phoneNumber,
+    address,
+  }) {
+    const parameters = {
+      transaction_details: {
+        order_id: id,
+        gross_amount: totalPrice,
+      },
+      customer_details: {
+        first_name: fullname,
+        phone: phoneNumber,
+        billing_address: {
+          address,
+        },
+      },
+      item_details: [{
+        name: type,
+      }],
+    };
+
+    try {
+      const midtransResponse = this._snap.charge(parameters);
+      return midtransResponse;
+    } catch (e) {
+      return e.error_messages;
     }
   }
 }
