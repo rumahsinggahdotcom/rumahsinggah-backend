@@ -20,9 +20,6 @@ class BookingsHandler {
     } = request.payload;
 
     await this._validator.validateBookingPayload({
-      roomId,
-      userId,
-      ownerId,
       start,
       end,
       totalPrice,
@@ -54,7 +51,8 @@ class BookingsHandler {
 
   async getBookingsByOwnerIdHandler(request, h) {
     const { id: credentialId } = request.auth.credentials;
-    const bookings = this._service.getBookingsByOwnerId(credentialId);
+    const bookings = await this._service.getBookingsByOwnerId(credentialId);
+    // console.log(bookings);
 
     const response = h.response({
       status: 'success',
@@ -69,7 +67,7 @@ class BookingsHandler {
 
   async getBookingByIdHandler(request, h) {
     const { id } = request.params;
-    const booking = this._service.getBookingById(id);
+    const booking = await this._service.getBookingById(id);
 
     const response = h.response({
       status: 'success',
@@ -125,7 +123,7 @@ class BookingsHandler {
       address,
     });
 
-    const bookingId = await this._service.putBookingById(id, 'complete');
+    const bookingId = await this._service.putBookingById(id, 'Paid');
 
     const response = h.response({
       status: 'success',

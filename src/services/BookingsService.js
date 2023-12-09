@@ -1,5 +1,5 @@
 const { Pool } = require('pg');
-const nanoid = require('nanoid');
+const { nanoid } = require('nanoid');
 const midtransClient = require('midtrans-client');
 const { mapDBToModel } = require('../utils');
 const InvariantError = require('../exceptions/InvariantError');
@@ -25,7 +25,7 @@ class BookingService {
     totalPrice,
     status,
   }) {
-    const id = `booking_${nanoid(16)}`;
+    const id = `booking-${nanoid(16)}`;
 
     const query = {
       text: 'INSERT INTO bookings values($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
@@ -42,18 +42,20 @@ class BookingService {
   }
 
   async getBookingsByOwnerId(ownerId) {
+    console.log(ownerId);
     const query = {
-      text: 'SELECT b.room_id, b.start, b.end, b.total_price, u.fullname FROM bookings as b LEFT JOIN users as u on b.user_id = u.id WHERE b.owner_id = $1',
+      text: 'SELECT b.room_id, b.start, b.end, b.total_price, b.status, u.fullname FROM bookings AS b LEFT JOIN users AS u ON b.user_id = u.id WHERE b.owner_id = $1',
       values: [ownerId],
     };
 
-    const { rows } = this._pool.query(query);
+    const { rows } = await this._pool.query(query);
+    console.log(rows);
 
     if (!rows.length) {
       throw new NotFoundError('Gagal menampilkan list bookings.');
     }
 
-    return mapDBToModel(rows);
+    return rows.map(mapDBToModel);
   }
 
   async getBookingById(id) {
@@ -62,13 +64,13 @@ class BookingService {
       values: [id],
     };
 
-    const { rows } = this._pool.query(query);
+    const { rows } = await this._pool.query(query);
 
     if (!rows.length) {
       throw new NotFoundError('Booking tidak ditemukan');
     }
 
-    return rows;
+    return rows.map(mapDBToModel)[0];
   }
 
   async putBookingById(id, status) {
@@ -77,7 +79,7 @@ class BookingService {
       values: [id, status],
     };
 
-    const { rows } = this._pool.query(query);
+    const { rows } = await this._pool.query(query);
 
     if (!rows[0].id) {
       throw new NotFoundError('Gagal melakukan update. Booking tidak ditemukan.');
@@ -134,17 +136,17 @@ class BookingService {
       customer_details: {
         first_name: fullname,
         phone: phoneNumber,
-        billing_address: {
-          address,
-        },
+        // billing_address: {
+        //   address,
+        // },
       },
-      item_details: [{
-        name: type,
-      }],
+      // item_details: [{
+      //   name: type,
+      // }],
     };
 
     try {
-      const midtransResponse = this._snap.charge(parameters);
+      const midtransResponse = await this._snap.createTransaction(parameters);
       return midtransResponse;
     } catch (e) {
       return e.error_messages;
