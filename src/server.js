@@ -26,6 +26,11 @@ const roomApp = require('./api/rooms');
 const RoomsService = require('./services/RoomsService');
 const RoomsValidator = require('./validator/room');
 
+// Booking
+const bookingApp = require('./api/bookings');
+const BookingService = require('./services/BookingsService');
+const BookingValidator = require('./validator/bookings');
+
 // upload
 const StorageService = require('./services/StorageService');
 
@@ -64,6 +69,7 @@ const init = async () => {
   const storageService = new StorageService(path.resolve(__dirname, 'api/file'));
   const roomsService = new RoomsService(cacheService);
   const authService = new AuthenticationService();
+  const bookingService = new BookingService();
   // const mongoose = new Mongoose();
 
   const server = hapi.server({
@@ -96,17 +102,17 @@ const init = async () => {
   ]);
 
   // configure hapi-mongodb connection
-  await server.register({
-    plugin: mongodb,
-    options: {
-      url: 'mongodb+srv://brillianitaaa:SJUN4FDLPfETnczI@cluster0.693knwt.mongodb.net/',
-    },
-    settings: {
-      useUnifiedTopology: true,
-      useNewUrlParser: true,
-    },
-    decorate: true,
-  });
+  // await server.register({
+  //   plugin: mongodb,
+  //   options: {
+  //     url: 'mongodb+srv://brillianitaaa:SJUN4FDLPfETnczI@cluster0.693knwt.mongodb.net/',
+  //   },
+  //   settings: {
+  //     useUnifiedTopology: true,
+  //     useNewUrlParser: true,
+  //   },
+  //   decorate: true,
+  // });
 
   server.auth.strategy('kossapp_jwt', 'jwt', {
     keys: process.env.ACCESS_TOKEN_KEY,
@@ -164,6 +170,13 @@ const init = async () => {
         ownersService,
         tokenManager: TokenManager,
         validator: AuthenticationsValidator,
+      },
+    },
+    {
+      plugin: bookingApp,
+      options: {
+        service: bookingService,
+        validator: BookingValidator,
       },
     },
   ]);
