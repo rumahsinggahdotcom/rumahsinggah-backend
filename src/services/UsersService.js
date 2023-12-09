@@ -134,7 +134,7 @@ class UsersService {
       throw new InvariantError('User tidak ditemukan.');
     }
 
-    return rows.map(mapDBToModel);
+    return rows.map(mapDBToModel)[0];
   }
 
   async verifyUsersCredentials({ username, password }) {
