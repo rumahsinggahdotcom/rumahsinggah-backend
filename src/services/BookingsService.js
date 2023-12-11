@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const midtransClient = require('midtrans-client');
@@ -151,6 +152,30 @@ class BookingService {
     } catch (e) {
       return e.error_messages;
     }
+  }
+
+  async midtransNotification({
+    order_id,
+    status_code,
+    gross_amount,
+    signature_key,
+    transaction_status,
+    fraud_status,
+  }) {
+    const hash = crypto.createHash('sha512').update(`${order_id}${status_code}${gross_amount}${process.env.MIDTRANS_SERVER_KEY}`).digest('hex');
+
+    if (signature_key !== hash) {
+      const match = false;
+    }
+
+    this._snap.transaction.notification({
+      order_id,
+      status_code,
+      gross_amount,
+      signature_key,
+      transaction_status,
+      fraud_status,
+    });
   }
 }
 
