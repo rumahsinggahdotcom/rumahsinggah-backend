@@ -1,4 +1,6 @@
+/* eslint-disable camelcase */
 const autoBind = require('auto-bind');
+import crypto from 'crypto';
 
 class BookingsHandler {
   constructor(service, validator) {
@@ -136,6 +138,26 @@ class BookingsHandler {
 
     response.code(200);
     return response;
+  }
+
+  async midtransNotificationHandler(request, h) {
+    const {
+      order_id,
+      status_code,
+      gross_amount,
+      signature_key,
+      transaction_status,
+      fraud_status,
+    } = request.payload;
+
+    await this._service.midtransNotification({
+      order_id,
+      status_code,
+      gross_amount,
+      signature_key,
+      transaction_status,
+      fraud_status,
+    });
   }
 }
 
