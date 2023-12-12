@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 const autoBind = require('auto-bind');
-import crypto from 'crypto';
+// import crypto from 'crypto';
 
 class BookingsHandler {
   constructor(service, validator) {
@@ -105,6 +105,7 @@ class BookingsHandler {
       start,
       end,
       totalPrice,
+      // name,
       type,
       fullname,
       phoneNumber,
@@ -119,19 +120,19 @@ class BookingsHandler {
       start,
       end,
       totalPrice,
+      // name,
       type,
       fullname,
       phoneNumber,
       address,
     });
 
-    const bookingId = await this._service.putBookingById(id, 'Paid');
+    // const bookingId = await this._service.putBookingById(id, 'Paid');
 
     const response = h.response({
       status: 'success',
       message: 'Berhasil melakukan transaksi',
       data: {
-        bookingId,
         midtransResponse,
       },
     });
@@ -141,23 +142,43 @@ class BookingsHandler {
   }
 
   async midtransNotificationHandler(request, h) {
-    const {
-      order_id,
-      status_code,
-      gross_amount,
-      signature_key,
-      transaction_status,
-      fraud_status,
-    } = request.payload;
+    let response;
+    const notificationJson = request.payload;
 
-    await this._service.midtransNotification({
-      order_id,
-      status_code,
-      gross_amount,
-      signature_key,
-      transaction_status,
-      fraud_status,
-    });
+    const {
+      message,
+      orderId,
+      transactionStatus,
+      fraudStatus,
+    } = await this._service.midtransNotification(notificationJson);
+
+    if (transactionStatus === 'capture') {
+      if (fraudStatus === 'accept') {
+        await this._service.putBookingById(orderId, 'paid');
+      }
+    } else if (transactionStatus === 'settlement') {
+      await this._service.putBookingById(orderId, 'paid');
+    } else if (transactionStatus === 'cancel' || transactionStatus === 'expire') {
+      await this._service.putBookingById(orderId, 'canceled');
+    } else if (transactionStatus === 'pending') {
+      await this._service.putBookingById(orderId, 'pending');
+    }
+
+    if (message) {
+      response = h.response({
+        status: 'error',
+        message,
+      });
+      response.code(500);
+    } else {
+      response = h.response({
+        status: 'success',
+        message: 'OK',
+      });
+      response.code(200);
+    }
+
+    return response;
   }
 }
 
