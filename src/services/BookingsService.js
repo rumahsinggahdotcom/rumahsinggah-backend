@@ -1,4 +1,5 @@
 /* eslint-disable camelcase */
+const crypto = require('crypto');
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const midtransClient = require('midtrans-client');
@@ -124,6 +125,7 @@ class BookingService {
   async postMidtransTransaction({
     id,
     totalPrice,
+    name,
     type,
     fullname,
     phoneNumber,
@@ -142,7 +144,10 @@ class BookingService {
         // },
       },
       // item_details: [{
-      //   name: type,
+      //   name,
+      //   category: type,
+      //   price: totalPrice,
+      //   quantity: 1,
       // }],
     };
 
@@ -154,28 +159,26 @@ class BookingService {
     }
   }
 
-  async midtransNotification({
-    order_id,
-    status_code,
-    gross_amount,
-    signature_key,
-    transaction_status,
-    fraud_status,
-  }) {
-    const hash = crypto.createHash('sha512').update(`${order_id}${status_code}${gross_amount}${process.env.MIDTRANS_SERVER_KEY}`).digest('hex');
+  async midtransNotification(notificationJson) {
+    const statusResponse = this._snap.transaction.notification(notificationJson);
 
-    if (signature_key !== hash) {
-      const match = false;
+    const orderId = statusResponse.order_id;
+    const transactionStatus = statusResponse.transaction_status;
+    const fraudStatus = statusResponse.fraud_status;
+
+    const hash = crypto.createHash('sha512').update(`${statusResponse.transaction_id}${statusResponse.status_code}${statusResponse.gross_amount}${process.env.MIDTRANS_SERVER_KEY}`);
+
+    if (hash !== statusResponse.signature_key) {
+      const message = 'Invalid Signature Key';
+      return {
+        message,
+        orderId,
+        transactionStatus,
+        fraudStatus,
+      };
     }
 
-    this._snap.transaction.notification({
-      order_id,
-      status_code,
-      gross_amount,
-      signature_key,
-      transaction_status,
-      fraud_status,
-    });
+    return { orderId, transactionStatus, fraudStatus };
   }
 }
 
