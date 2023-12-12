@@ -139,16 +139,16 @@ class BookingService {
       customer_details: {
         first_name: fullname,
         phone: phoneNumber,
-        // billing_address: {
-        //   address,
-        // },
+        billing_address: {
+          address,
+        },
       },
-      // item_details: [{
-      //   name,
-      //   category: type,
-      //   price: totalPrice,
-      //   quantity: 1,
-      // }],
+      item_details: [{
+        name,
+        category: type,
+        price: totalPrice,
+        quantity: 1,
+      }],
     };
 
     try {
