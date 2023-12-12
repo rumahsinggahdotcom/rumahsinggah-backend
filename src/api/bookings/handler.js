@@ -1,6 +1,5 @@
 /* eslint-disable camelcase */
 const autoBind = require('auto-bind');
-// import crypto from 'crypto';
 
 class BookingsHandler {
   constructor(service, validator) {
@@ -54,7 +53,6 @@ class BookingsHandler {
   async getBookingsByOwnerIdHandler(request, h) {
     const { id: credentialId } = request.auth.credentials;
     const bookings = await this._service.getBookingsByOwnerId(credentialId);
-    // console.log(bookings);
 
     const response = h.response({
       status: 'success',
