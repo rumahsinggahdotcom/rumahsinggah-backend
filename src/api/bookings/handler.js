@@ -105,7 +105,7 @@ class BookingsHandler {
       start,
       end,
       totalPrice,
-      // name,
+      name,
       type,
       fullname,
       phoneNumber,
@@ -120,14 +120,12 @@ class BookingsHandler {
       start,
       end,
       totalPrice,
-      // name,
+      name,
       type,
       fullname,
       phoneNumber,
       address,
     });
-
-    // const bookingId = await this._service.putBookingById(id, 'Paid');
 
     const response = h.response({
       status: 'success',
