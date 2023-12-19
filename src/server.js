@@ -40,6 +40,11 @@ const AuthenticationService = require('./services/AuthenticationsService');
 const AuthenticationsValidator = require('./validator/authentications');
 const TokenManager = require('./tokenize/TokenManager');
 
+// Reviews
+const reviewApp = require('./api/reviews');
+const ReviewsService = require('./services/ReviewsService');
+const ReviewsValidator = require('./validator/reviews');
+
 // Cache
 const CacheService = require('./services/CacheService');
 
@@ -70,6 +75,7 @@ const init = async () => {
   const roomsService = new RoomsService(cacheService);
   const authService = new AuthenticationService();
   const bookingService = new BookingService();
+  const reviewsService = new ReviewsService();
   // const mongoose = new Mongoose();
 
   const server = hapi.server({
@@ -177,6 +183,13 @@ const init = async () => {
       options: {
         service: bookingService,
         validator: BookingValidator,
+      },
+    },
+    {
+      plugin: reviewApp,
+      options: {
+        service: reviewsService,
+        validator: ReviewsValidator,
       },
     },
   ]);
