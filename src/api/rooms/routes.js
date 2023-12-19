@@ -29,7 +29,7 @@ const routes = (handler) => [
   },
   {
     method: 'GET',
-    path: '/koss/{kosId}/rooms',
+    path: '/koss/{kosId}/room',
     handler: handler.getRoomsByKosIdHandler,
   },
   {
