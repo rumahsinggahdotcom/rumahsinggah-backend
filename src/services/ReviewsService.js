@@ -1,6 +1,8 @@
 const { Pool } = require('pg');
 const nanoid = require('nanoid');
 const InvariantError = require('../exceptions/InvariantError');
+const NotFoundError = require('../exceptions/NotFoundError');
+const mapDBToModel = require('../utils');
 
 class ReviewsService {
   constructor() {
@@ -25,6 +27,21 @@ class ReviewsService {
     }
 
     return rows[0].id;
+  }
+
+  async getReviewsById(id) {
+    const query = {
+      text: 'SELECT * FROM reviews WHERE id = $1',
+      values: [id],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows.length) {
+      throw new NotFoundError('Gagal mendapatkan review. review tidak ditemukan');
+    }
+
+    return rows.map(mapDBToModel)[0];
   }
 }
 
