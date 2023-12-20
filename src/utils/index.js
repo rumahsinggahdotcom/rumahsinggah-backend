@@ -23,6 +23,8 @@ const mapDBToModel = ({
   end,
   total_price,
   status,
+  score,
+  review,
 }) => ({
   id,
   ownerId: owner_id,
@@ -47,6 +49,8 @@ const mapDBToModel = ({
   end,
   totalPrice: total_price,
   status,
+  score,
+  review,
 });
 
 /* assign images payload to array */
