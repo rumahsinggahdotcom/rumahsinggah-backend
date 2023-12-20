@@ -16,7 +16,7 @@ class ReviewsHandler {
       review,
     } = request.payload;
 
-    await this._validator.validateReviewsPayload({
+    await this._validator.validateReviewPayload({
       userId,
       kosId,
       score,
@@ -51,6 +51,32 @@ class ReviewsHandler {
       data: {
         review,
       },
+    });
+
+    response.code(200);
+    return response;
+  }
+
+  async putReviewByIdHandler(request, h) {
+    const { reviewId } = request.params;
+    const {
+      score,
+      review,
+    } = request.payload;
+
+    await this._validator.editReviewValidator({
+      score,
+      review,
+    });
+
+    await this._service.editReviewById(reviewId, {
+      score,
+      review,
+    });
+
+    const response = h.response({
+      status: 'success',
+      message: 'Review berhasil diedit',
     });
 
     response.code(200);
