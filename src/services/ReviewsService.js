@@ -43,6 +43,22 @@ class ReviewsService {
 
     return rows.map(mapDBToModel)[0];
   }
+
+  async editReviewById(id, {
+    score,
+    review,
+  }) {
+    const query = {
+      text: 'UPDATE reviews SET score = $2, review = $3 WHERE id = $1 RETURNING id',
+      values: [id, score, review],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows[0].id) {
+      throw new NotFoundError('Gagal memperbarui review. Review tidak ditemukan');
+    }
+  }
 }
 
 module.exports = ReviewsService;
