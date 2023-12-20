@@ -9,6 +9,11 @@ const routes = (handler) => [
     path: '/koss/{kosId}/reviews/{reviewId}',
     handler: handler.getReviewByIdHandler,
   },
+  {
+    method: 'PUT',
+    path: '/koss/{kosId}/reviews/{reviewId}',
+    handler: handler.putReviewByIdHandler,
+  },
 ];
 
 module.exports = routes;
