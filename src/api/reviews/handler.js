@@ -41,6 +41,21 @@ class ReviewsHandler {
     response.code(200);
     return response;
   }
+
+  async getReviewByIdHandler(request, h) {
+    const { reviewId } = request.params;
+    const review = await this._service.getReviewById(reviewId);
+
+    const response = h.response({
+      status: 'success',
+      data: {
+        review,
+      },
+    });
+
+    response.code(200);
+    return response;
+  }
 }
 
 module.exports = ReviewsHandler;
