@@ -7,4 +7,9 @@ const ReviewSchemaPayload = Joi.object({
   review: Joi.string.required(),
 });
 
-module.exports = { ReviewSchemaPayload };
+const EditReviewSchemaPayload = Joi.object({
+  score: Joi.number().integer().options({ convert: false }).required(),
+  review: Joi.string.required(),
+});
+
+module.exports = { ReviewSchemaPayload, EditReviewSchemaPayload };
