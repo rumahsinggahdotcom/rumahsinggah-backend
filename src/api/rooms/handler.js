@@ -123,6 +123,27 @@ class RoomsHandler {
     return response;
   }
 
+  async getPriceByRoomIdHandler(request, h) {
+    const { duration } = request.query;
+    let price = await this._roomsService.getPriceByRoomId;
+
+    if (duration) {
+      if (duration === 12) {
+        price *= 2;
+      }
+    }
+
+    const response = h.response({
+      status: 'success',
+      data: {
+        price,
+      },
+    });
+
+    response.code(200);
+    return response;
+  }
+
   async putRoomByIdHandler(request, h) {
     const { roomId } = request.params;
     const {
