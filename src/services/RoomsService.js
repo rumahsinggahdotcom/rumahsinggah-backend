@@ -112,7 +112,11 @@ class RoomService {
       };
     } catch (error) {
       const query = {
-        text: 'SELECT r.id, r.kos_id, r.type, r.max_people, r.price, r.quantity, r.description, i.image FROM rooms as r LEFT JOIN image_rooms as i ON r.id = i.room_id WHERE kos_id = $1',
+        text: `SELECT r.id, r.kos_id, r.type, r.max_people, r.price, r.quantity, r.description, i.image 
+        FROM rooms as r 
+        LEFT JOIN image_rooms as i 
+        ON r.id = i.room_id 
+        WHERE kos_id = $1`,
         values: [kosId],
       };
 
@@ -158,7 +162,9 @@ class RoomService {
       };
     } catch (error) {
       const queryRoom = {
-        text: 'SELECT * FROM rooms WHERE id = $1',
+        text: `SELECT id, kos_id, type, max_people, quantity, description 
+        FROM rooms 
+        WHERE id = $1`,
         values: [id],
       };
 
@@ -181,6 +187,21 @@ class RoomService {
       await this._cacheService.set(`roomId:${id}`, JSON.stringify(roomData));
       return { room: roomData };
     }
+  }
+
+  async getPriceByRoomId(id) {
+    const query = {
+      text: 'SELECT price FROM rooms WHERE id = $1',
+      values: [id],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows.length) {
+      throw new NotFoundError('Room tidak ditemukan.');
+    }
+
+    return rows[0].price;
   }
 
   async editRoomById(id, {
