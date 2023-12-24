@@ -134,13 +134,13 @@ class OwnersService {
     const result = await this._pool.query(query);
     // console.log(result);
     if (!result.rows.length) {
-      throw new AuthenticationError('Kredensial yang anda berikan salah.');
+      throw new AuthenticationError('Username atau password yang anda berikan salah.');
     }
     const { id, password: hashedPassword } = result.rows[0];
     const match = await bcrypt.compare(password, hashedPassword);
 
     if (!match) {
-      throw new AuthenticationError('Kredensial yang anda berikan salah.');
+      throw new AuthenticationError('Username atau password yang anda berikan salah.');
     }
 
     return id;
