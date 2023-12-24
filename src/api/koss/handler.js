@@ -2,8 +2,9 @@ const autobind = require('auto-bind');
 const { assignImageToArray } = require('../../utils');
 
 class KossHandler {
-  constructor(kossService, storageService, validator) {
+  constructor(kossService, ownersService, storageService, validator) {
     this._kossService = kossService;
+    this._ownersService = ownersService;
     this._storageService = storageService;
     this._validator = validator;
     autobind(this);
@@ -11,7 +12,6 @@ class KossHandler {
 
   async postKosHandler(request, h) {
     const {
-      // ownerId,
       name,
       address,
       description,
@@ -23,7 +23,6 @@ class KossHandler {
 
     // Validate Kos Payload
     await this._validator.validateKosPayload({
-      ownerId: credentialId,
       name,
       address,
       description,
@@ -36,6 +35,7 @@ class KossHandler {
       }));
     }
 
+    await this._ownersService.verifyOwnerOnly(credentialId);
     const kosId = await this._kossService.addKos({
       ownerId: credentialId,
       name,
