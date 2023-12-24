@@ -251,7 +251,6 @@ class KossService {
   }
 
   async verifyKosAccess(id, credentialId) {
-    console.log(id, credentialId);
     const query = {
       text: 'SELECT id, owner_id FROM koss WHERE id = $1',
       values: [id],
