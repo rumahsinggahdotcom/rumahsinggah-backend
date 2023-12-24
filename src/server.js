@@ -3,7 +3,7 @@ const Jwt = require('@hapi/jwt');
 const path = require('path');
 // const Mongoose = require('mongoose');
 // const { MongoClient } = require('mongodb');
-const mongodb = require('hapi-mongodb');
+// const mongodb = require('hapi-mongodb');
 const ClientError = require('./exceptions/ClientError');
 
 // Owners
@@ -155,6 +155,7 @@ const init = async () => {
       plugin: kossApp,
       options: {
         kossService,
+        ownersService,
         storageService,
         validator: KossValidator,
       },
