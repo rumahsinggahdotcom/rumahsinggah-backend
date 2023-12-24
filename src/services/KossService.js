@@ -27,8 +27,8 @@ class KossService {
       await client.query('BEGIN');
       await client.query('SET CONSTRAINTS ALL DEFERRED');
       const query = {
-        text: 'INSERT INTO koss values($1, $2, $3, $4, $5, $6) RETURNING id',
-        values: [id, ownerId, name, address, description, null],
+        text: 'INSERT INTO koss values($1, $2, $3, $4, $5) RETURNING id',
+        values: [id, ownerId, name, address, description],
       };
       const { rows } = await client.query(query);
       if (!rows[0].id) {
@@ -110,7 +110,7 @@ class KossService {
       };
     } catch (error) {
       const query = {
-        text: 'SELECT k.id, k.owner_id, k.name, k.address, k.description, k.rating, i.image FROM koss AS k LEFT JOIN image_koss AS i ON k.id = i.kos_id',
+        text: 'SELECT k.id, k.owner_id, k.name, k.address, k.description, i.image FROM koss AS k LEFT JOIN image_koss AS i ON k.id = i.kos_id',
       };
 
       const { rows } = await this._pool.query(query);
@@ -127,7 +127,6 @@ class KossService {
             name: item.name,
             address: item.address,
             description: item.description,
-            rating: item.rating,
             image: [{ image: item.image }],
           });
         }
@@ -217,7 +216,7 @@ class KossService {
       };
     } catch (error) {
       const query = {
-        text: 'SELECT k.id, k.owner_id, k.name, k.address, k.description, k.rating, i.image FROM koss as k LEFT JOIN image_koss as i ON k.id = i.kos_id WHERE k.owner_id = $1',
+        text: 'SELECT k.id, k.owner_id, k.name, k.address, k.description, i.image FROM koss as k LEFT JOIN image_koss as i ON k.id = i.kos_id WHERE k.owner_id = $1',
         values: [owner],
       };
 
@@ -238,7 +237,6 @@ class KossService {
             name: item.name,
             address: item.address,
             description: item.description,
-            rating: item.rating,
             image: [{ image: item.image }],
           });
         }
