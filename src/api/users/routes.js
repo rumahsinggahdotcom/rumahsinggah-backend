@@ -27,7 +27,7 @@ const routes = (handler) => [
   },
   {
     method: 'PUT',
-    path: '/user/changepassword',
+    path: '/user/password',
     handler: handler.putUserPasswordByIdHandler,
     options: {
       auth: 'kossapp_jwt',

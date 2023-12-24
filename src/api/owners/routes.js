@@ -22,7 +22,7 @@ const ownerRoutes = (handler) => [
   },
   {
     method: 'PUT',
-    path: '/owner/changepassword',
+    path: '/owner/password',
     handler: handler.putOwnerPasswordByIdHandler,
     options: {
       auth: 'kossapp_jwt',
