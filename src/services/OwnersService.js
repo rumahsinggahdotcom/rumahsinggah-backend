@@ -145,6 +145,19 @@ class OwnersService {
 
     return id;
   }
+
+  async verifyOwnerOnly(credentialId) {
+    const query = {
+      text: 'SELECT id FROM owners WHERE id = $1',
+      values: [credentialId],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows.length) {
+      throw new AuthenticationError('Anda tidak berhak mengakses resources ini');
+    }
+  }
 }
 
 module.exports = OwnersService;
