@@ -31,7 +31,7 @@ class RoomsHandler {
 
     if (arrayImgs.length > 0) {
       await Promise.all(arrayImgs.map(async (image) => {
-        this._validator.validateImageRoomPayload(image);
+        await this._validator.validateImageRoomPayload(image);
       }));
     }
 
@@ -43,6 +43,12 @@ class RoomsHandler {
       quantity,
       description,
     }, arrayImgs);
+
+    if (arrayImgs.length > 0) {
+      await Promise.all(arrayImgs.map(async (image) => {
+        await this._storageService.writeFile(image, image.hapi, 'rooms');
+      }));
+    }
 
     const response = h.response({
       status: 'success',
@@ -71,6 +77,11 @@ class RoomsHandler {
     }));
 
     const imgsId = await this._roomsService.addImageRoom(kosId, roomId, arrayImgs);
+    if (arrayImgs.length > 0) {
+      await Promise.all(arrayImgs.map(async (image) => {
+        await this._storageService.writeFile(image, image.hapi, 'rooms');
+      }));
+    }
 
     const response = h.response({
       status: 'success',
@@ -179,8 +190,9 @@ class RoomsHandler {
     const { id: credentialId } = request.auth.credentials;
     // const { imageId } = request.payload;
     await this._roomsService.verifyRoomAccess(roomId, credentialId);
-    const filename = await this._roomsService.delImageRoomById(roomId, imageId);
-    await this._storageService.deleteFile(filename, 'rooms');
+    await this._roomsService.delImageRoomById(roomId, imageId);
+    // const filename = pathImageFile.match('/rooms/(.*)/')[1];
+    // await this._storageService.deleteFile(filename, 'rooms');
 
     const response = h.response({
       status: 'success',
