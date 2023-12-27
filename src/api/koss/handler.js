@@ -21,6 +21,8 @@ class KossHandler {
     const { id: credentialId } = request.auth.credentials;
     const arrayImgs = assignImageToArray(images);
 
+    await this._ownersService.verifyOwnerOnly(credentialId);
+
     // Validate Kos Payload
     await this._validator.validateKosPayload({
       name,
@@ -29,19 +31,24 @@ class KossHandler {
     });
 
     // Validate Image Kos Payload
-    if (arrayImgs.length > 1) {
+    if (arrayImgs.length > 0) {
       await Promise.all(arrayImgs.map(async (image) => {
         await this._validator.validateImageKosPayload(image.hapi.headers);
       }));
     }
 
-    await this._ownersService.verifyOwnerOnly(credentialId);
     const kosId = await this._kossService.addKos({
       ownerId: credentialId,
       name,
       address,
       description,
     }, arrayImgs);
+
+    if (arrayImgs.length > 0) {
+      await Promise.all(arrayImgs.map(async (image) => {
+        await this._storageService.writeFile(image, image.hapi, 'koss');
+      }));
+    }
 
     const response = h.response({
       status: 'success',
@@ -68,6 +75,12 @@ class KossHandler {
       }));
     }
     const imgsId = await this._kossService.addImageKos(kosId, arrayImgs, credentialId);
+
+    if (arrayImgs.length > 0) {
+      await Promise.all(arrayImgs.map(async (image) => {
+        await this._storageService.writeFile(image, image.hapi, 'koss');
+      }));
+    }
 
     const response = h.response({
       status: 'success',
@@ -155,22 +168,30 @@ class KossHandler {
   }
 
   async delImageKosByIdHandler(request, h) {
+    // let response;
     const { id, imageId } = request.params;
     const { id: credentialId } = request.auth.credentials;
     // const { imageId } = request.payload;
 
     await this._kossService.verifyKosAccess(id, credentialId);
 
-    const filename = await this._kossService.delImageKosById(id, imageId);
-    await this._storageService.deleteFile(filename, 'koss');
+    // const pathImageFile = await this._kossService.delImageKosById(id, imageId);
+    // console.log(pathImageFile);
 
-    const response = h.response({
-      status: 'success',
-      message: 'Image berhasil dihapus.',
-    });
+    // try {
+    //   const filename = pathImageFile.match(/koss\/(.*)/)[1];
+    //   await this._storageService.deleteFile(filename, 'koss');
+    // } catch (err) {
+    //   console.log('Image tidak ditemukan di storage');
+    // } finally {
+    //   response = h.response({
+    //     status: 'success',
+    //     message: 'Image berhasil dihapus.',
+    //   });
 
-    response.code(200);
-    return response;
+    //   response.code(200);
+    // }
+    // return response;
   }
 }
 
