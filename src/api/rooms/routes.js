@@ -1,3 +1,5 @@
+const path = require('path');
+
 const routes = (handler) => [
   {
     method: 'POST',
@@ -36,6 +38,15 @@ const routes = (handler) => [
     method: 'GET',
     path: '/koss/{kosId}/room/{roomId}',
     handler: handler.getRoomByIdHandler,
+  },
+  {
+    method: 'GET',
+    path: '/file/rooms/{param*}',
+    handler: {
+      directory: {
+        path: path.resolve(__dirname, '..', 'file/rooms'),
+      },
+    },
   },
   {
     method: 'PUT',
