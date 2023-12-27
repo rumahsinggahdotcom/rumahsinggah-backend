@@ -1,16 +1,14 @@
-const path = require('path');
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const InvariantError = require('../exceptions/InvariantError');
 const NotFoundError = require('../exceptions/NotFoundError');
 const AuthenticationError = require('../exceptions/AuthenticationError');
 const { mapDBToModel } = require('../utils');
-const StorageService = require('./StorageService');
 
 class RoomService {
-  constructor(cacheService) {
+  constructor(cacheService, storageService) {
     this._pool = new Pool();
-    this._storageService = new StorageService(path.resolve(__dirname, '../api/file'));
+    this._storageService = storageService;
     this._cacheService = cacheService;
   }
 
@@ -90,6 +88,7 @@ class RoomService {
       throw new InvariantError('Gagal menambahkan image room');
     }
 
+    await this._storageService.writeFile(image, imageFilename, 'rooms');
     return rows[0].id;
   }
 

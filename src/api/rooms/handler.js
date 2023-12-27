@@ -44,12 +44,6 @@ class RoomsHandler {
       description,
     }, arrayImgs);
 
-    if (arrayImgs.length > 0) {
-      await Promise.all(arrayImgs.map(async (image) => {
-        await this._storageService.writeFile(image, image.hapi, 'rooms');
-      }));
-    }
-
     const response = h.response({
       status: 'success',
       message: 'Room Berhasil Ditambahkan',
@@ -72,16 +66,11 @@ class RoomsHandler {
 
     if (arrayImgs.length === 0) throw new InvariantError('Image tidak ada');
 
-    Promise.all(arrayImgs.map(async (image) => {
+    await Promise.all(arrayImgs.map(async (image) => {
       await this._validator.validateImageRoomPayload(image);
     }));
 
     const imgsId = await this._roomsService.addImageRoom(kosId, roomId, arrayImgs);
-    if (arrayImgs.length > 0) {
-      await Promise.all(arrayImgs.map(async (image) => {
-        await this._storageService.writeFile(image, image.hapi, 'rooms');
-      }));
-    }
 
     const response = h.response({
       status: 'success',
