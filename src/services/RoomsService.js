@@ -102,7 +102,8 @@ class RoomService {
       };
     } catch (error) {
       const query = {
-        text: `SELECT r.id, r.kos_id, r.type, r.max_people, r.price, r.quantity, r.description, i.image 
+        text: `SELECT r.id, r.kos_id, r.type, r.max_people, r.price, r.quantity, r.description, 
+        i.id as image_id, i.image 
         FROM rooms as r 
         LEFT JOIN image_rooms as i 
         ON r.id = i.room_id 
@@ -120,7 +121,10 @@ class RoomService {
         const existingItem = result.find((groupedItem) => groupedItem.id === item.id);
 
         if (existingItem) {
-          existingItem.image.push({ image: item.image });
+          existingItem.image.push({
+            image_id: item.image_id,
+            image: item.image,
+          });
         } else {
           result.push({
             id: item.id,
@@ -130,7 +134,10 @@ class RoomService {
             price: item.price,
             quantity: item.quantity,
             description: item.description,
-            image: [{ image: item.image }],
+            image: [{
+              image_id: item.image_id,
+              image: item.image,
+            }],
           });
         }
 
@@ -165,7 +172,7 @@ class RoomService {
       }
 
       const queryImageroom = {
-        text: 'SELECT image FROM image_rooms WHERE room_id = $1',
+        text: 'SELECT id as image_id, image FROM image_rooms WHERE room_id = $1',
         values: [id],
       };
 
