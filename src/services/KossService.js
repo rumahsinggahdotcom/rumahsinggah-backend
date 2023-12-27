@@ -102,7 +102,7 @@ class KossService {
       };
     } catch (error) {
       const query = {
-        text: `SELECT k.id, k.owner_id, k.name, k.address, k.description, i.image 
+        text: `SELECT k.id, k.owner_id, k.name, k.address, k.description, i.id as image_id, i.image 
         FROM koss AS k 
         LEFT JOIN image_koss AS i 
         ON k.id = i.kos_id`,
@@ -114,7 +114,10 @@ class KossService {
         const existingItem = result.find((groupedItem) => groupedItem.id === item.id);
 
         if (existingItem) {
-          existingItem.image.push({ image: item.image });
+          existingItem.image.push({
+            image_id: item.image_id,
+            image: item.image,
+          });
         } else {
           result.push({
             id: item.id,
@@ -122,7 +125,10 @@ class KossService {
             name: item.name,
             address: item.address,
             description: item.description,
-            image: [{ image: item.image }],
+            image: [{
+              image_id: item.id,
+              image: item.image,
+            }],
           });
         }
 
