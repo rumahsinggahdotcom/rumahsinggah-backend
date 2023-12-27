@@ -70,8 +70,8 @@ const init = async () => {
   const cacheService = new CacheService();
   const usersService = new UsersService();
   const ownersService = new OwnersService();
-  const kossService = new KossService(cacheService);
   const storageService = new StorageService(path.resolve(__dirname, 'api/file'));
+  const kossService = new KossService(cacheService, storageService);
   const roomsService = new RoomsService(cacheService);
   const authService = new AuthenticationService();
   const bookingService = new BookingService();

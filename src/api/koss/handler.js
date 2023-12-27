@@ -44,12 +44,6 @@ class KossHandler {
       description,
     }, arrayImgs);
 
-    if (arrayImgs.length > 0) {
-      await Promise.all(arrayImgs.map(async (image) => {
-        await this._storageService.writeFile(image, image.hapi, 'koss');
-      }));
-    }
-
     const response = h.response({
       status: 'success',
       message: 'Kos Berhasil Ditambahkan',
@@ -75,12 +69,6 @@ class KossHandler {
       }));
     }
     const imgsId = await this._kossService.addImageKos(kosId, arrayImgs, credentialId);
-
-    if (arrayImgs.length > 0) {
-      await Promise.all(arrayImgs.map(async (image) => {
-        await this._storageService.writeFile(image, image.hapi, 'koss');
-      }));
-    }
 
     const response = h.response({
       status: 'success',

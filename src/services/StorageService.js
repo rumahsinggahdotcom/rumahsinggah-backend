@@ -9,8 +9,8 @@ class StorageService {
     }
   }
 
-  writeFile(file, image, section) {
-    const filename = +new Date() + image.filename;
+  writeFile(file, filename, section) {
+    // const filename = +new Date() + image.filename;
     const path = `${this._folder}/${section}/${filename}`;
 
     const fileStream = fs.createWriteStream(path);
