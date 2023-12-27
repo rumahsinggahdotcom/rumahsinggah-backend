@@ -186,20 +186,27 @@ class RoomsHandler {
   }
 
   async delImageRoomByIdHandler(request, h) {
+    let response;
     const { roomId, imageId } = request.params;
     const { id: credentialId } = request.auth.credentials;
-    // const { imageId } = request.payload;
+
     await this._roomsService.verifyRoomAccess(roomId, credentialId);
-    await this._roomsService.delImageRoomById(roomId, imageId);
-    // const filename = pathImageFile.match('/rooms/(.*)/')[1];
-    // await this._storageService.deleteFile(filename, 'rooms');
+    const pathImageFile = await this._roomsService.delImageRoomById(roomId, imageId);
 
-    const response = h.response({
-      status: 'success',
-      message: 'Image Room berhasil dihapus',
-    });
+    try {
+      const filename = pathImageFile.match(/rooms\/(.*)/)[1];
+      await this._storageService.deleteFile(filename, 'rooms');
+    } catch (err) {
+      console.log('Image room tidak ditemukan di storage');
+    } finally {
+      response = h.response({
+        status: 'success',
+        message: 'Image Room berhasil dihapus',
+      });
 
-    response.code(200);
+      response.code(200);
+    }
+
     return response;
   }
 }
