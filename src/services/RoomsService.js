@@ -56,11 +56,9 @@ class RoomService {
   async addImageRoom(kosId, roomId, arrayImgs) {
     const imgsId = [];
     const client = await this._pool.connect();
-    console.log(kosId);
 
     try {
       await client.query('BEGIN');
-
       await Promise.all(arrayImgs.map(async (image) => {
         const imgId = await this.storeImgRoomsToStorageDb(roomId, image, { client });
         imgsId.push(imgId);
@@ -79,25 +77,18 @@ class RoomService {
   }
 
   async storeImgRoomsToStorageDb(roomId, image, { client = this._pool } = {}) {
-    const roomQuery = {
-      text: 'SELECT kos_id, type FROM rooms WHERE id = $1',
-      values: [roomId],
-    };
-    const resultRoom = await client.query(roomQuery);
-    const kosId = resultRoom.rows[0].kos_id;
-    const roomType = resultRoom.rows[0].type;
-    const filename = `${kosId}_${roomType}_${image.hapi.filename}`;
+    const imageFilename = +new Date() + image.hapi.filename;
+    const pathImageFile = `http://${process.env.HOST}:${process.env.PORT}/file/rooms/${imageFilename}`;
     const id = `image_room-${nanoid(16)}`;
 
     const imgRoomQuery = {
       text: 'INSERT INTO image_rooms values($1, $2, $3) RETURNING id',
-      values: [id, roomId, filename],
+      values: [id, roomId, pathImageFile],
     };
     const { rows } = await client.query(imgRoomQuery);
     if (!rows[0].id) {
       throw new InvariantError('Gagal menambahkan image room');
     }
-    await this._storageService.writeFile(image, filename, 'rooms');
 
     return rows[0].id;
   }
