@@ -168,30 +168,29 @@ class KossHandler {
   }
 
   async delImageKosByIdHandler(request, h) {
-    // let response;
+    let response;
     const { id, imageId } = request.params;
     const { id: credentialId } = request.auth.credentials;
     // const { imageId } = request.payload;
 
     await this._kossService.verifyKosAccess(id, credentialId);
 
-    // const pathImageFile = await this._kossService.delImageKosById(id, imageId);
-    // console.log(pathImageFile);
+    const pathImageFile = await this._kossService.delImageKosById(id, imageId);
 
-    // try {
-    //   const filename = pathImageFile.match(/koss\/(.*)/)[1];
-    //   await this._storageService.deleteFile(filename, 'koss');
-    // } catch (err) {
-    //   console.log('Image tidak ditemukan di storage');
-    // } finally {
-    //   response = h.response({
-    //     status: 'success',
-    //     message: 'Image berhasil dihapus.',
-    //   });
+    try {
+      const filename = pathImageFile.match(/koss\/(.*)/)[1];
+      await this._storageService.deleteFile(filename, 'koss');
+    } catch (err) {
+      console.log('Image tidak ditemukan di storage');
+    } finally {
+      response = h.response({
+        status: 'success',
+        message: 'Image berhasil dihapus.',
+      });
 
-    //   response.code(200);
-    // }
-    // return response;
+      response.code(200);
+    }
+    return response;
   }
 }
 
