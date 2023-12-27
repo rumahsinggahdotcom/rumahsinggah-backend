@@ -87,7 +87,6 @@ class RoomsHandler {
   async getRoomsByKosIdHandler(request, h) {
     const { kosId } = request.params;
     const { rooms, isCache } = await this._roomsService.getRoomsByKosId(kosId);
-    console.log(isCache);
 
     const response = h.response({
       status: 'success',
