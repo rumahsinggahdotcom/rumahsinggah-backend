@@ -77,19 +77,13 @@ class KossService {
   }
 
   async storeImgKossToStorageDb(kosId, image, { client = this._pool } = {}) {
-    const kosQuery = {
-      text: 'SELECT owner_id, name FROM koss where id = $1',
-      values: [kosId],
-    };
-    const resultKos = await client.query(kosQuery);
-    const kosOwnerId = resultKos.rows[0].owner_id;
-    const kosName = resultKos.rows[0].name;
-    const filename = `${kosOwnerId}_${kosName}_${image.hapi.filename}`;
+    const imageFilename = +new Date() + image.hapi.filename;
+    const pathImageFile = `http://${process.env.HOST}:${process.env.PORT}/file/koss/${imageFilename}`;
 
     const id = `img_kos-${nanoid(16)}`;
     const imgKosQuery = {
       text: 'INSERT INTO image_koss values($1, $2, $3) RETURNING id',
-      values: [id, kosId, filename],
+      values: [id, kosId, pathImageFile],
     };
 
     const resImgKos = await client.query(imgKosQuery);
@@ -97,7 +91,7 @@ class KossService {
       throw new InvariantError('Image Kos Gagal Ditambahkan.');
     }
 
-    await this._storageService.writeFile(image, filename, 'koss');
+    // await this._storageService.writeFile(image, imageFilename, 'koss');
     return resImgKos.rows[0].id;
   }
 
@@ -110,7 +104,10 @@ class KossService {
       };
     } catch (error) {
       const query = {
-        text: 'SELECT k.id, k.owner_id, k.name, k.address, k.description, i.image FROM koss AS k LEFT JOIN image_koss AS i ON k.id = i.kos_id',
+        text: `SELECT k.id, k.owner_id, k.name, k.address, k.description, i.image 
+        FROM koss AS k 
+        LEFT JOIN image_koss AS i 
+        ON k.id = i.kos_id`,
       };
 
       const { rows } = await this._pool.query(query);
