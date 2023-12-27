@@ -91,7 +91,6 @@ class KossService {
       throw new InvariantError('Image Kos Gagal Ditambahkan.');
     }
 
-    // await this._storageService.writeFile(image, imageFilename, 'koss');
     return resImgKos.rows[0].id;
   }
 
