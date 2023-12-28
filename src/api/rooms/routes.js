@@ -58,7 +58,7 @@ const routes = (handler) => [
   },
   {
     method: 'DELETE',
-    path: '/room/{roomId}/image/{imageId}',
+    path: '/rooms/{roomId}/image/{imageId}',
     handler: handler.delImageRoomByIdHandler,
     options: {
       auth: 'kossapp_jwt',
