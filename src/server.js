@@ -160,7 +160,6 @@ const init = async () => {
       options: {
         kossService,
         ownersService,
-        storageService,
         validator: KossValidator,
       },
     },

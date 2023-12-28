@@ -2,10 +2,9 @@ const autobind = require('auto-bind');
 const { assignImageToArray } = require('../../utils');
 
 class KossHandler {
-  constructor(kossService, ownersService, storageService, validator) {
+  constructor(kossService, ownersService, validator) {
     this._kossService = kossService;
     this._ownersService = ownersService;
-    this._storageService = storageService;
     this._validator = validator;
     autobind(this);
   }
@@ -156,26 +155,18 @@ class KossHandler {
   }
 
   async delImageKosByIdHandler(request, h) {
-    let response;
     const { kosId, imageId } = request.params;
     const { id: credentialId } = request.auth.credentials;
 
     await this._kossService.verifyKosAccess(kosId, credentialId);
-    const pathImageFile = await this._kossService.delImageKosById(kosId, imageId);
+    await this._kossService.delImageKosById(kosId, imageId);
 
-    try {
-      const filename = pathImageFile.match(/koss\/(.*)/)[1];
-      await this._storageService.deleteFile(filename, 'koss');
-    } catch (err) {
-      console.log('Image tidak ditemukan di storage');
-    } finally {
-      response = h.response({
-        status: 'success',
-        message: 'Image berhasil dihapus.',
-      });
+    const response = h.response({
+      status: 'success',
+      message: 'Image berhasil dihapus.',
+    });
 
-      response.code(200);
-    }
+    response.code(200);
     return response;
   }
 }

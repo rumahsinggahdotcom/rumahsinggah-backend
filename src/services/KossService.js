@@ -202,11 +202,17 @@ class KossService {
       throw new NotFoundError('Image gagal dihapus. Id tidak ditemukan');
     }
 
-    const filename = rows[0].image;
+    const pathImageFile = rows[0].image;
+    const filename = pathImageFile.match(/koss\/(.*)/)[1];
+
+    try {
+      await this._storageService.deleteFile(filename, 'koss');
+    } catch (err) {
+      console.log('Image tidak ditemukan di storage, message: ', err.message);
+    }
 
     await this._cacheService.delete('koss');
     await this._cacheService.delete(`kosId:${kosId}`);
-    return filename;
   }
 
   async getOwnerKoss({ owner }) {
