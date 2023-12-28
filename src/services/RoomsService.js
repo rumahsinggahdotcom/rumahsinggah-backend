@@ -219,7 +219,7 @@ class RoomService {
     description,
   }) {
     const query = {
-      text: 'UPDATE rooms SET type = $2, max_people = $3, price = $4, quantity = $5, description = $6 WHERE id = $1 RETURNING id',
+      text: 'UPDATE rooms SET type = $2, max_people = $3, price = $4, quantity = $5, description = $6 WHERE id = $1 RETURNING id, kos_id',
       values: [id, type, maxPeople, price, quantity, description],
     };
 
@@ -227,6 +227,11 @@ class RoomService {
     if (!rows.length) {
       throw new InvariantError('Gagal Memperbarui Room. Id Tidak Ditemukan.');
     }
+
+    const kosId = rows[0].kos_id;
+
+    await this._cacheService.delete(`roomId:${id}`);
+    await this._cacheService.delete(`roomsKosId:${kosId}`);
   }
 
   async delImageRoomById(roomId, imageId) {
@@ -236,19 +241,28 @@ class RoomService {
     };
 
     const { rows } = await this._pool.query(query);
-
     if (!rows.length) {
       throw new InvariantError('Gagal menghapus image. Id tidak ditemukan.');
     }
 
     const pathImageFile = rows[0].image;
     const filename = pathImageFile.match(/rooms\/(.*)/)[1];
-    console.log('filename', filename);
     try {
       await this._storageService.deleteFile(filename, 'rooms');
     } catch (err) {
       console.log('Image tidak ditemukan di storage, message: ', err.message);
     }
+
+    const kosIdQuery = {
+      text: 'SELECT kos_id FROM rooms WHERE id = $1',
+      values: [roomId],
+    };
+
+    const resultKosId = await this._pool.query(kosIdQuery);
+    const kosId = resultKosId.rows[0].kos_id;
+
+    await this._cacheService.delete(`roomId:${roomId}`);
+    await this._cacheService.delete(`roomsKosId:${kosId}`);
   }
 
   async verifyRoomAccess(roomId, credentialId) {
@@ -260,7 +274,7 @@ class RoomService {
     const { rows } = await this._pool.query(query);
 
     if (!rows.length) {
-      throw new InvariantError('Kos tidak ditemukan.');
+      throw new InvariantError('Room tidak ditemukan.');
     }
 
     const kos = rows[0];
