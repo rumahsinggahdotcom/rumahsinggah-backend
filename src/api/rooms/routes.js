@@ -17,7 +17,7 @@ const routes = (handler) => [
   },
   {
     method: 'POST',
-    path: '/koss/{kosId}/room/images',
+    path: '/koss/room/images',
     handler: handler.postRoomImagesHandler,
     options: {
       payload: {

@@ -57,12 +57,11 @@ class RoomsHandler {
   }
 
   async postRoomImagesHandler(request, h) {
-    const { kosId } = request.params;
-    const { roomId, images } = request.payload;
+    const { id, images } = request.payload;
     const { id: credentialId } = request.auth.credentials;
     const arrayImgs = assignImageToArray(images);
 
-    await this._roomsService.verifyRoomAccess(roomId, credentialId);
+    await this._roomsService.verifyRoomAccess(id, credentialId);
 
     if (arrayImgs.length === 0) throw new InvariantError('Image tidak ada');
 
@@ -70,7 +69,7 @@ class RoomsHandler {
       await this._validator.validateImageRoomPayload(image);
     }));
 
-    const imgsId = await this._roomsService.addImageRoom(kosId, roomId, arrayImgs);
+    const imgsId = await this._roomsService.addImageRoom(id, arrayImgs);
 
     const response = h.response({
       status: 'success',

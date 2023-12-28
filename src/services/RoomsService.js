@@ -41,6 +41,7 @@ class RoomService {
         }));
       }
       await client.query('COMMIT');
+      await this._cacheService.delete(`roomId:${roomId}`);
       await this._cacheService.delete(`roomsKosId:${kosId}`);
       return roomId;
     } catch (error) {
@@ -51,18 +52,27 @@ class RoomService {
     }
   }
 
-  async addImageRoom(kosId, roomId, arrayImgs) {
+  async addImageRoom(id, arrayImgs) {
     const imgsId = [];
     const client = await this._pool.connect();
 
     try {
       await client.query('BEGIN');
       await Promise.all(arrayImgs.map(async (image) => {
-        const imgId = await this.storeImgRoomsToStorageDb(roomId, image, { client });
+        const imgId = await this.storeImgRoomsToStorageDb(id, image, { client });
         imgsId.push(imgId);
       }));
-
       await client.query('COMMIT');
+
+      const query = {
+        text: 'SELECT kos_id FROM rooms WHERE id = $1',
+        values: [id],
+      };
+
+      const { rows } = await client.query(query);
+      const kosId = rows[0].kos_id;
+
+      await this._cacheService.delete(`roomId:${id}`);
       await this._cacheService.delete(`roomsKosId:${kosId}`);
 
       return imgsId;
