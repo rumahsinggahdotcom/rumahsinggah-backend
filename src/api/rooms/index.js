@@ -5,9 +5,9 @@ module.exports = {
   name: 'roomApp',
   version: '1.0.0',
   register: async (server, {
-    roomsService, kossService, storageService, validator,
+    roomsService, kossService, validator,
   }) => {
-    const roomsHandler = new RoomsHandler(roomsService, kossService, storageService, validator);
+    const roomsHandler = new RoomsHandler(roomsService, kossService, validator);
     server.route(roomRoutes(roomsHandler));
   },
 };

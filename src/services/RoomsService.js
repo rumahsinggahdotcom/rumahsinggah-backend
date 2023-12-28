@@ -236,13 +236,19 @@ class RoomService {
     };
 
     const { rows } = await this._pool.query(query);
-    const filename = rows[0].image;
 
     if (!rows.length) {
       throw new InvariantError('Gagal menghapus image. Id tidak ditemukan.');
     }
 
-    return filename;
+    const pathImageFile = rows[0].image;
+    const filename = pathImageFile.match(/rooms\/(.*)/)[1];
+    console.log('filename', filename);
+    try {
+      await this._storageService.deleteFile(filename, 'rooms');
+    } catch (err) {
+      console.log('Image tidak ditemukan di storage, message: ', err.message);
+    }
   }
 
   async verifyRoomAccess(roomId, credentialId) {

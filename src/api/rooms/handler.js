@@ -3,10 +3,9 @@ const { assignImageToArray } = require('../../utils');
 const InvariantError = require('../../exceptions/InvariantError');
 
 class RoomsHandler {
-  constructor(roomsService, kossService, storageService, validator) {
+  constructor(roomsService, kossService, validator) {
     this._roomsService = roomsService;
     this._kossService = kossService;
-    this._storageService = storageService;
     this._validator = validator;
     autoBind(this);
   }
@@ -173,26 +172,17 @@ class RoomsHandler {
   }
 
   async delImageRoomByIdHandler(request, h) {
-    let response;
     const { roomId, imageId } = request.params;
     const { id: credentialId } = request.auth.credentials;
 
     await this._roomsService.verifyRoomAccess(roomId, credentialId);
-    const pathImageFile = await this._roomsService.delImageRoomById(roomId, imageId);
+    await this._roomsService.delImageRoomById(roomId, imageId);
 
-    try {
-      const filename = pathImageFile.match(/rooms\/(.*)/)[1];
-      await this._storageService.deleteFile(filename, 'rooms');
-    } catch (err) {
-      console.log('Image room tidak ditemukan di storage');
-    } finally {
-      response = h.response({
-        status: 'success',
-        message: 'Image Room berhasil dihapus',
-      });
-
-      response.code(200);
-    }
+    const response = h.response({
+      status: 'success',
+      message: 'Image Room berhasil dihapus',
+    });
+    response.code(200);
 
     return response;
   }

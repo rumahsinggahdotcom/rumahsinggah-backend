@@ -169,7 +169,6 @@ const init = async () => {
       options: {
         kossService,
         roomsService,
-        storageService,
         validator: RoomsValidator,
       },
     },
