@@ -15,7 +15,7 @@ exports.up = (pgm) => {
       notNull: true,
     },
     max_people: {
-      type: 'VARCHAR',
+      type: 'INTEGER',
       notNull: true,
     },
     price: {
