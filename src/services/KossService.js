@@ -191,20 +191,21 @@ class KossService {
     await this._cacheService.delete(`ownerkoss:${rows[0].owner_id}`);
   }
 
-  async delImageKosById(id, imageId) {
+  async delImageKosById(kosId, imageId) {
     const query = {
       text: 'DELETE FROM image_koss WHERE kos_id = $1 AND id = $2 RETURNING id, image',
-      values: [id, imageId],
+      values: [kosId, imageId],
     };
 
     const { rows } = await this._pool.query(query);
-    const filename = rows[0].image;
-
-    if (!rows[0].id) {
+    if (!rows.length) {
       throw new NotFoundError('Image gagal dihapus. Id tidak ditemukan');
     }
+
+    const filename = rows[0].image;
+
     await this._cacheService.delete('koss');
-    await this._cacheService.delete(`kosId:${id}`);
+    await this._cacheService.delete(`kosId:${kosId}`);
     return filename;
   }
 
