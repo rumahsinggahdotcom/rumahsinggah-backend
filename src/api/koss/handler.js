@@ -20,7 +20,7 @@ class KossHandler {
     const { id: credentialId } = request.auth.credentials;
     const arrayImgs = assignImageToArray(images);
 
-    await this._ownersService.verifyOwnerOnly(credentialId);
+    await this._ownersService.verifyOwnersOnly(credentialId);
 
     // Validate Kos Payload
     await this._validator.validateKosPayload({
