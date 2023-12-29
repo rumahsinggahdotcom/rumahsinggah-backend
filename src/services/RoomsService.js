@@ -196,7 +196,7 @@ class RoomService {
     }
   }
 
-  async getPriceByRoomId(id) {
+  async getPriceByRoomId(id, duration) {
     const query = {
       text: 'SELECT price FROM rooms WHERE id = $1',
       values: [id],
@@ -208,7 +208,16 @@ class RoomService {
       throw new NotFoundError('Room tidak ditemukan.');
     }
 
-    return rows[0].price;
+    let priceRoom = rows[0].price;
+    if (duration) {
+      if (duration === 12 || duration === 6) {
+        priceRoom *= duration / 6;
+      } else {
+        throw new InvariantError('Durasi tidak tersedia');
+      }
+    }
+
+    return priceRoom;
   }
 
   async editRoomById(id, {

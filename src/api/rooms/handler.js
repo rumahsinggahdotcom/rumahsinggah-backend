@@ -122,13 +122,8 @@ class RoomsHandler {
 
   async getPriceByRoomIdHandler(request, h) {
     const { duration } = request.query;
-    let price = await this._roomsService.getPriceByRoomId;
-
-    if (duration) {
-      if (duration === 12) {
-        price *= 2;
-      }
-    }
+    const { id } = request.params;
+    const price = await this._roomsService.getPriceByRoomId(id, duration);
 
     const response = h.response({
       status: 'success',
