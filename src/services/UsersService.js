@@ -1,9 +1,11 @@
 const bcrypt = require('bcrypt');
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
-const InvariantError = require('../exceptions/InvariantError');
 const { mapDBToModel } = require('../utils');
+const InvariantError = require('../exceptions/InvariantError');
 const NotFoundError = require('../exceptions/NotFoundError');
+const AuthorizationError = require('../exceptions/AuthorizationError');
+const AuthenticationError = require('../exceptions/AuthenticationError');
 
 class UsersService {
   constructor() {
@@ -145,7 +147,7 @@ class UsersService {
 
     const { rows } = await this._pool.query(query);
     if (!rows.length) {
-      throw new InvariantError('Kredensial yang anda berikan salah.');
+      throw new AuthenticationError('Kredensial yang anda berikan salah.');
     }
 
     const { id, password: hashedPassword } = rows[0];
@@ -153,10 +155,23 @@ class UsersService {
     const match = bcrypt.compare(password, hashedPassword);
 
     if (!match) {
-      throw new InvariantError('Kredensial yang anda berikan salah');
+      throw new AuthenticationError('Kredensial yang anda berikan salah');
     }
 
     return id;
+  }
+
+  async verifyUsersOnly(id) {
+    const query = {
+      text: 'SELECT id FROM users WHERE id = $1',
+      values: [id],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows.length) {
+      throw new AuthorizationError('Anda tidak berhak mengakses resources ini');
+    }
   }
 }
 

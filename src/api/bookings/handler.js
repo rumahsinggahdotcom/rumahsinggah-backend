@@ -2,8 +2,10 @@
 const autoBind = require('auto-bind');
 
 class BookingsHandler {
-  constructor(service, validator) {
-    this._service = service;
+  constructor(bookingsService, usersService, roomsService, validator) {
+    this._bookingsService = bookingsService;
+    this._usersService = usersService;
+    this._roomsService = roomsService;
     this._validator = validator;
 
     autoBind(this);
@@ -12,13 +14,15 @@ class BookingsHandler {
   async postBookingHandler(request, h) {
     const {
       roomId,
-      userId,
       ownerId,
       start,
       end,
-      totalPrice,
+      duration,
       status,
     } = request.payload;
+    const { id: credentialId } = request.auth.credentials;
+
+    const totalPrice = await this._roomsService.
 
     await this._validator.validateBookingPayload({
       start,
@@ -27,9 +31,11 @@ class BookingsHandler {
       status,
     });
 
-    const id = await this._service.postBooking({
+    await this._usersService.verifyUserOnly(credentialId);
+
+    const id = await this._bookingsService.postBooking({
       roomId,
-      userId,
+      credentialId,
       ownerId,
       start,
       end,
@@ -52,7 +58,7 @@ class BookingsHandler {
 
   async getBookingsByOwnerIdHandler(request, h) {
     const { id: credentialId } = request.auth.credentials;
-    const bookings = await this._service.getBookingsByOwnerId(credentialId);
+    const bookings = await this._bookingsService.getBookingsByOwnerId(credentialId);
 
     const response = h.response({
       status: 'success',
@@ -67,7 +73,7 @@ class BookingsHandler {
 
   async getBookingByIdHandler(request, h) {
     const { id } = request.params;
-    const booking = await this._service.getBookingById(id);
+    const booking = await this._bookingsService.getBookingById(id);
 
     const response = h.response({
       status: 'success',
@@ -85,8 +91,8 @@ class BookingsHandler {
     const { id: credentialId } = request.auth.credentials;
     const { status } = request.payload;
 
-    await this._service.verifyOwnerBookingAccess(id, credentialId);
-    await this._service.putBookingById(id, status);
+    await this._bookingsService.verifyOwnerBookingAccess(id, credentialId);
+    await this._bookingsService.putBookingById(id, status);
 
     const response = h.response({
       status: 'success',
@@ -111,9 +117,9 @@ class BookingsHandler {
     } = request.payload;
 
     const { id: credentialId } = request.auth.credentials;
-    await this._service.verifyUserBookingAccess(id, credentialId);
+    await this._bookingsService.verifyUserBookingAccess(id, credentialId);
 
-    const midtransResponse = await this._service.postMidtransTransaction({
+    const midtransResponse = await this._bookingsService.postMidtransTransaction({
       id,
       start,
       end,
@@ -146,18 +152,18 @@ class BookingsHandler {
       orderId,
       transactionStatus,
       fraudStatus,
-    } = await this._service.midtransNotification(notificationJson);
+    } = await this._bookingsService.midtransNotification(notificationJson);
 
     if (transactionStatus === 'capture') {
       if (fraudStatus === 'accept') {
-        await this._service.putBookingById(orderId, 'paid');
+        await this._bookingsService.putBookingById(orderId, 'paid');
       }
     } else if (transactionStatus === 'settlement') {
-      await this._service.putBookingById(orderId, 'paid');
+      await this._bookingsService.putBookingById(orderId, 'paid');
     } else if (transactionStatus === 'cancel' || transactionStatus === 'expire') {
-      await this._service.putBookingById(orderId, 'canceled');
+      await this._bookingsService.putBookingById(orderId, 'canceled');
     } else if (transactionStatus === 'pending') {
-      await this._service.putBookingById(orderId, 'pending');
+      await this._bookingsService.putBookingById(orderId, 'pending');
     }
 
     if (message) {

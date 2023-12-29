@@ -75,7 +75,7 @@ const init = async () => {
   const kossService = new KossService(cacheService, storageService);
   const roomsService = new RoomsService(cacheService, storageService);
   const authService = new AuthenticationService();
-  const bookingService = new BookingService();
+  const bookingsService = new BookingService();
   const reviewsService = new ReviewsService();
   // const mongoose = new Mongoose();
 
@@ -184,7 +184,9 @@ const init = async () => {
     {
       plugin: bookingApp,
       options: {
-        service: bookingService,
+        bookingsService,
+        usersService,
+        roomsService,
         validator: BookingValidator,
       },
     },
