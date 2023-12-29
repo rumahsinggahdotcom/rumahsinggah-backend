@@ -22,7 +22,8 @@ class BookingsHandler {
     } = request.payload;
     const { id: credentialId } = request.auth.credentials;
 
-    const totalPrice = await this._roomsService.
+    const totalPrice = await this._roomsService.getPriceByRoomId(roomId, duration);
+    await this._roomsService.verifyRoomsOwner(roomId, ownerId);
 
     await this._validator.validateBookingPayload({
       start,

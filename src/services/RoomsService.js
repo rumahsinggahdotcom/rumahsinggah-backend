@@ -196,30 +196,6 @@ class RoomService {
     }
   }
 
-  async getPriceByRoomId(id, duration) {
-    const query = {
-      text: 'SELECT price FROM rooms WHERE id = $1',
-      values: [id],
-    };
-
-    const { rows } = await this._pool.query(query);
-
-    if (!rows.length) {
-      throw new NotFoundError('Room tidak ditemukan.');
-    }
-
-    let priceRoom = rows[0].price;
-    if (duration) {
-      if (duration === 12 || duration === 6) {
-        priceRoom *= duration / 6;
-      } else {
-        throw new InvariantError('Durasi tidak tersedia');
-      }
-    }
-
-    return priceRoom;
-  }
-
   async editRoomById(id, {
     type,
     maxPeople,
@@ -290,6 +266,50 @@ class RoomService {
 
     if (kos.owner_id !== credentialId) {
       throw new AuthenticationError('Anda tidak berhak mengakses resource ini.');
+    }
+  }
+
+  async getPriceByRoomId(id, duration) {
+    const query = {
+      text: 'SELECT price FROM rooms WHERE id = $1',
+      values: [id],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows.length) {
+      throw new NotFoundError('Room tidak ditemukan.');
+    }
+
+    let priceRoom = rows[0].price;
+    if (duration) {
+      if (duration === 12 || duration === 6) {
+        priceRoom *= duration / 6;
+      } else {
+        throw new InvariantError('Durasi tidak tersedia');
+      }
+    }
+
+    return priceRoom;
+  }
+
+  async verifyRoomsOwner(roomId, ownerId) {
+    const query = {
+      text: `SELECT r.id, k.owner_id 
+      FROM rooms as r 
+      INNER JOIN koss as k 
+      ON r.kos_id = k.id 
+      WHERE r.id = $1`,
+      values: [roomId],
+    };
+
+    const { rows } = await this._pool.query(query);
+    if (!rows.length) {
+      throw new InvariantError('Room tidak ditemukan');
+    }
+
+    if (ownerId !== rows[0].owner_id) {
+      throw new InvariantError('Kamar dan pemilik kamar tidak bersesuaian');
     }
   }
 }
