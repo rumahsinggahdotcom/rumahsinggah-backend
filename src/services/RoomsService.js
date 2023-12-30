@@ -250,25 +250,6 @@ class RoomService {
     await this._cacheService.delete(`roomsKosId:${kosId}`);
   }
 
-  async verifyRoomAccess(roomId, credentialId) {
-    const query = {
-      text: 'SELECT k.owner_id FROM koss as k LEFT JOIN rooms as r ON k.id = r.kos_id WHERE r.id = $1',
-      values: [roomId],
-    };
-
-    const { rows } = await this._pool.query(query);
-
-    if (!rows.length) {
-      throw new InvariantError('Room tidak ditemukan.');
-    }
-
-    const kos = rows[0];
-
-    if (kos.owner_id !== credentialId) {
-      throw new AuthenticationError('Anda tidak berhak mengakses resource ini.');
-    }
-  }
-
   async getPriceByRoomId(id, duration) {
     const query = {
       text: 'SELECT price FROM rooms WHERE id = $1',
@@ -291,6 +272,38 @@ class RoomService {
     }
 
     return priceRoom;
+  }
+
+  async editRoomQuantityById(id, quantity) {
+    const query = {
+      text: 'UPDATE rooms SET quantity = quantity - $2 WHERE id = $1 RETURNING id',
+      values: [id, quantity],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows[0].id) {
+      throw new InvariantError('Gagal memperbarui jumlah kamar');
+    }
+  }
+
+  async verifyRoomAccess(roomId, credentialId) {
+    const query = {
+      text: 'SELECT k.owner_id FROM koss as k LEFT JOIN rooms as r ON k.id = r.kos_id WHERE r.id = $1',
+      values: [roomId],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows.length) {
+      throw new InvariantError('Room tidak ditemukan.');
+    }
+
+    const kos = rows[0];
+
+    if (kos.owner_id !== credentialId) {
+      throw new AuthenticationError('Anda tidak berhak mengakses resource ini.');
+    }
   }
 
   async verifyRoomsOwner(roomId, ownerId) {

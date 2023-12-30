@@ -95,6 +95,7 @@ class BookingsHandler {
     const { status } = request.payload;
 
     await this._bookingsService.verifyOwnerBookingAccess(id, credentialId);
+    await this._roomsService.editRoomQuantityById(id, 1);
     await this._bookingsService.editBookingById(id, status);
 
     const response = h.response({
