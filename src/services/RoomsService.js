@@ -281,9 +281,10 @@ class RoomService {
     };
 
     const { rows } = await this._pool.query(query);
+    console.log(rows);
 
     if (!rows[0].id) {
-      throw new InvariantError('Gagal memperbarui jumlah kamar');
+      throw new InvariantError('Gagal memperbarui jumlah room. Room tidak ditemukan');
     }
   }
 
