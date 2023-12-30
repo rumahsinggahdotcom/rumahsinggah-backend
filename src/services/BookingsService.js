@@ -75,7 +75,7 @@ class BookingService {
     return rows.map(mapDBToModel)[0];
   }
 
-  async putBookingById(id, status) {
+  async editBookingById(id, status) {
     const query = {
       text: 'UPDATE bookings SET status = $2 WHERE id = $1 RETURNING id',
       values: [id, status],

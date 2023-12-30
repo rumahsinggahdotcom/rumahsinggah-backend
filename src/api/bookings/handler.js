@@ -74,9 +74,8 @@ class BookingsHandler {
 
   async getBookingByIdHandler(request, h) {
     const { id } = request.params;
-    const { id: credentialId } = request.auth.credentials;
-
-    await this._bookingsService.verifyOwnerBookingAccess(credentialId);
+    // const { id: credentialId } = request.auth.credentials;
+    // await this._bookingsService.verifyOwnerBookingAccess(credentialId);
     const booking = await this._bookingsService.getBookingById(id);
 
     const response = h.response({
@@ -96,7 +95,7 @@ class BookingsHandler {
     const { status } = request.payload;
 
     await this._bookingsService.verifyOwnerBookingAccess(id, credentialId);
-    await this._bookingsService.putBookingById(id, status);
+    await this._bookingsService.editBookingById(id, status);
 
     const response = h.response({
       status: 'success',
@@ -160,14 +159,14 @@ class BookingsHandler {
 
     if (transactionStatus === 'capture') {
       if (fraudStatus === 'accept') {
-        await this._bookingsService.putBookingById(orderId, 'paid');
+        await this._bookingsService.editBookingById(orderId, 'paid');
       }
     } else if (transactionStatus === 'settlement') {
-      await this._bookingsService.putBookingById(orderId, 'paid');
+      await this._bookingsService.editBookingById(orderId, 'paid');
     } else if (transactionStatus === 'cancel' || transactionStatus === 'expire') {
-      await this._bookingsService.putBookingById(orderId, 'canceled');
+      await this._bookingsService.editBookingById(orderId, 'canceled');
     } else if (transactionStatus === 'pending') {
-      await this._bookingsService.putBookingById(orderId, 'pending');
+      await this._bookingsService.editBookingById(orderId, 'pending');
     }
 
     if (message) {
