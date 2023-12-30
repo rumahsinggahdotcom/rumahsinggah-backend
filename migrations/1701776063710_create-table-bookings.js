@@ -34,6 +34,14 @@ exports.up = (pgm) => {
       type: 'VARCHAR',
       notNull: true,
     },
+    snap_token: {
+      type: 'VARCHAR',
+      notNull: false,
+    },
+    snap_redirect_url: {
+      type: 'VARCHAR',
+      notNull: false,
+    },
   });
 
   pgm.addConstraint('bookings', 'fk_bookings.room_id_rooms_.id', 'FOREIGN KEY(room_id) REFERENCES rooms(id) ON DELETE CASCADE');
