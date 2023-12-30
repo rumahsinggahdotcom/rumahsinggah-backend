@@ -107,7 +107,7 @@ class BookingService {
 
   async verifyOwnerBookingAccess(id, credentialId) {
     const query = {
-      text: 'SELECT id, owner_id FROM bookings WHERE id = $1',
+      text: 'SELECT owner_id FROM bookings WHERE id = $1',
       values: [id],
     };
 

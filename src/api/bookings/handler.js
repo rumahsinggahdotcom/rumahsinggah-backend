@@ -74,6 +74,9 @@ class BookingsHandler {
 
   async getBookingByIdHandler(request, h) {
     const { id } = request.params;
+    const { id: credentialId } = request.auth.credentials;
+
+    await this._bookingsService.verifyOwnerBookingAccess(credentialId);
     const booking = await this._bookingsService.getBookingById(id);
 
     const response = h.response({

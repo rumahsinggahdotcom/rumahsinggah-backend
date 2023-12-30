@@ -16,6 +16,9 @@ const routes = (handler) => [
     method: 'GET',
     path: '/koss/booking/{id}',
     handler: handler.getBookingByIdHandler,
+    options: {
+      auth: 'kossapp_jwt',
+    },
   },
   {
     method: 'PUT',
