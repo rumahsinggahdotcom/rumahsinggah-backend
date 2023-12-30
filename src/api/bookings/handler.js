@@ -32,11 +32,11 @@ class BookingsHandler {
       status,
     });
 
-    await this._usersService.verifyUserOnly(credentialId);
+    await this._usersService.verifyUsersOnly(credentialId);
 
     const id = await this._bookingsService.postBooking({
       roomId,
-      credentialId,
+      userId: credentialId,
       ownerId,
       start,
       end,
@@ -89,44 +89,29 @@ class BookingsHandler {
     return response;
   }
 
-  async putBookingByIdHandler(request, h) {
+  async acceptBookingByIdHandler(request, h) {
     const { id } = request.params;
     const { id: credentialId } = request.auth.credentials;
-    const { status } = request.payload;
-
-    await this._bookingsService.verifyOwnerBookingAccess(id, credentialId);
-    await this._roomsService.editRoomQuantityById(id, 1);
-    await this._bookingsService.editBookingById(id, status);
-
-    const response = h.response({
-      status: 'success',
-      message: 'Update booking berhasil',
-    });
-
-    response.code(200);
-    return response;
-  }
-
-  async postMidtransTransactionHandler(request, h) {
     const {
-      id,
-      start,
-      end,
       totalPrice,
       name,
+      roomId,
       type,
       fullname,
       phoneNumber,
       address,
+      status,
     } = request.payload;
 
-    const { id: credentialId } = request.auth.credentials;
-    await this._bookingsService.verifyUserBookingAccess(id, credentialId);
-
-    const midtransResponse = await this._bookingsService.postMidtransTransaction({
+    await this._bookingsService.verifyOwnerBookingAccess(id, credentialId);
+    await this._roomsService.editRoomQuantityById(roomId, 1);
+    await this._bookingsService.editBookingStatusById(id, status);
+    const {
+      bookingId,
+      snapToken,
+      snapRedirectUrl,
+    } = this._bookingsService.postMidtransTransaction({
       id,
-      start,
-      end,
       totalPrice,
       name,
       type,
@@ -137,15 +122,63 @@ class BookingsHandler {
 
     const response = h.response({
       status: 'success',
-      message: 'Berhasil melakukan transaksi',
+      message: 'Accept booking berhasil',
       data: {
-        midtransResponse,
+        id: bookingId,
+        totalPrice,
+        name,
+        type,
+        fullname,
+        phoneNumber,
+        address,
+        snapToken,
+        snapRedirectUrl,
       },
     });
 
     response.code(200);
     return response;
   }
+
+  // async postMidtransTransactionHandler(request, h) {
+  //   const {
+  //     id,
+  //     start,
+  //     end,
+  //     totalPrice,
+  //     name,
+  //     type,
+  //     fullname,
+  //     phoneNumber,
+  //     address,
+  //   } = request.payload;
+
+  //   const { id: credentialId } = request.auth.credentials;
+  //   await this._bookingsService.verifyUserBookingAccess(id, credentialId);
+
+  //   const midtransResponse = await this._bookingsService.postMidtransTransaction({
+  //     id,
+  //     start,
+  //     end,
+  //     totalPrice,
+  //     name,
+  //     type,
+  //     fullname,
+  //     phoneNumber,
+  //     address,
+  //   });
+
+  //   const response = h.response({
+  //     status: 'success',
+  //     message: 'Berhasil melakukan transaksi',
+  //     data: {
+  //       midtransResponse,
+  //     },
+  //   });
+
+  //   response.code(200);
+  //   return response;
+  // }
 
   async midtransNotificationHandler(request, h) {
     let response;

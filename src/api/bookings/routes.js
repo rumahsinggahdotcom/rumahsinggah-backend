@@ -3,6 +3,9 @@ const routes = (handler) => [
     method: 'POST',
     path: '/koss/booking',
     handler: handler.postBookingHandler,
+    options: {
+      auth: 'kossapp_jwt',
+    },
   },
   {
     method: 'GET',
@@ -23,19 +26,19 @@ const routes = (handler) => [
   {
     method: 'PUT',
     path: '/koss/booking/{id}',
-    handler: handler.putBookingByIdHandler,
+    handler: handler.acceptBookingByIdHandler,
     options: {
       auth: 'kossapp_jwt',
     },
   },
-  {
-    method: 'POST',
-    path: '/koss/booking/payment',
-    handler: handler.postMidtransTransactionHandler,
-    options: {
-      auth: 'kossapp_jwt',
-    },
-  },
+  // {
+  //   method: 'POST',
+  //   path: '/koss/booking/payment',
+  //   handler: handler.postMidtransTransactionHandler,
+  //   options: {
+  //     auth: 'kossapp_jwt',
+  //   },
+  // },
 ];
 
 module.exports = routes;
