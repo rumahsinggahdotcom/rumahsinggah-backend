@@ -25,6 +25,8 @@ const mapDBToModel = ({
   status,
   score,
   review,
+  snap_token,
+  snap_redirect_url,
 }) => ({
   id,
   ownerId: owner_id,
@@ -51,6 +53,8 @@ const mapDBToModel = ({
   status,
   score,
   review,
+  snapToken: snap_token,
+  snapRedirectUrl: snap_redirect_url,
 });
 
 /* assign images payload to array */

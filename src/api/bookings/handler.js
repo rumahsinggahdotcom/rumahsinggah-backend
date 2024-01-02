@@ -102,7 +102,6 @@ class BookingsHandler {
       address,
       status,
     } = request.payload;
-
     await this._bookingsService.verifyOwnerBookingAccess(id, credentialId);
     await this._roomsService.editRoomQuantityById(roomId, 1);
     await this._bookingsService.editBookingStatusById(id, status);
