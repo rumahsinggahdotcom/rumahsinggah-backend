@@ -139,6 +139,17 @@ class UsersService {
     return rows.map(mapDBToModel)[0];
   }
 
+  async getUserDetailMidtransById(id) {
+    const query = {
+      text: 'SELECT fullname, phone_number, address FROM users WHERE id = $1',
+      values: [id],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    return rows.map(mapDBToModel)[0];
+  }
+
   async verifyUsersCredentials({ username, password }) {
     const query = {
       text: 'SELECT id, password FROM users WHERE username = $1',
