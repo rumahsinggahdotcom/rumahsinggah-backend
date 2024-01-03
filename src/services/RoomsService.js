@@ -274,6 +274,26 @@ class RoomService {
     return priceRoom;
   }
 
+  async getRoomDetailMidtransById(id) {
+    const query = {
+      text: `SELECT r.type, k.name 
+      FROM rooms AS r 
+      INNER JOIN koss AS k 
+      ON r.kos_id = k.id 
+      WHERE r.id = $1`,
+      values: [id],
+    };
+
+    const { rows } = await this._pool.query(query);
+    if (!rows.length) {
+      throw new NotFoundError('Room tidak ditemukan');
+    }
+
+    const { type, name } = rows[0];
+
+    return { type, name };
+  }
+
   async editRoomQuantityById(id, quantity) {
     const query = {
       text: 'UPDATE rooms SET quantity = quantity - $2 WHERE id = $1 RETURNING id',
