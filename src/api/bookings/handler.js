@@ -93,23 +93,38 @@ class BookingsHandler {
     const { id } = request.params;
     const { id: credentialId } = request.auth.credentials;
     const {
-      totalPrice,
-      name,
+      // totalPrice,
+      // name,
+      // roomId,
+      // type,
+      // fullname,
+      // phoneNumber,
+      // address,
+      status,
+    } = request.payload;
+    const {
       roomId,
-      type,
+      userId,
+      totalPrice,
+    } = await this._bookingsService.getBookingById(id);
+    console.log(roomId, userId, totalPrice);
+
+    await this._bookingsService.verifyOwnerBookingAccess(id, credentialId);
+
+    const { type, name } = await this._roomsService.getRoomDetailMidtransById(roomId);
+    const {
       fullname,
       phoneNumber,
       address,
-      status,
-    } = request.payload;
-    await this._bookingsService.verifyOwnerBookingAccess(id, credentialId);
-    await this._roomsService.editRoomQuantityById(roomId, 1);
-    await this._bookingsService.editBookingStatusById(id, status);
+    // } = await this._usersService.getUserDetailMidtransById(userId);
+    } = await this._usersService.getUserById(userId);
+    console.log(fullname, phoneNumber, address);
+
     const {
       bookingId,
       snapToken,
       snapRedirectUrl,
-    } = this._bookingsService.postMidtransTransaction({
+    } = await this._bookingsService.postMidtransTransaction({
       id,
       totalPrice,
       name,
@@ -118,6 +133,10 @@ class BookingsHandler {
       phoneNumber,
       address,
     });
+    console.log(bookingId, snapToken, snapRedirectUrl);
+
+    await this._roomsService.editRoomQuantityById(roomId, 1);
+    await this._bookingsService.editBookingStatusById(id, status);
 
     const response = h.response({
       status: 'success',
@@ -192,14 +211,14 @@ class BookingsHandler {
 
     if (transactionStatus === 'capture') {
       if (fraudStatus === 'accept') {
-        await this._bookingsService.editBookingById(orderId, 'paid');
+        await this._bookingsService.editBookingStatusById(orderId, 'paid');
       }
     } else if (transactionStatus === 'settlement') {
-      await this._bookingsService.editBookingById(orderId, 'paid');
+      await this._bookingsService.editBookingStatusById(orderId, 'paid');
     } else if (transactionStatus === 'cancel' || transactionStatus === 'expire') {
-      await this._bookingsService.editBookingById(orderId, 'canceled');
+      await this._bookingsService.editBookingStatusById(orderId, 'canceled');
     } else if (transactionStatus === 'pending') {
-      await this._bookingsService.editBookingById(orderId, 'pending');
+      await this._bookingsService.editBookingStatusById(orderId, 'pending');
     }
 
     if (message) {
