@@ -119,6 +119,7 @@ class BookingService {
 
     try {
       const midtransResponse = await this._snap.createTransaction(parameters);
+      console.log(midtransResponse);
       const snapToken = midtransResponse.token;
       const snapRedirectUrl = midtransResponse.redirect_url;
 
@@ -131,26 +132,33 @@ class BookingService {
       if (!rows[0].id) {
         throw new InvariantError('Gagal memperbarui snap token dan redirect url');
       }
+      console.log(rows);
 
       const bookingId = rows[0].id;
 
       return { bookingId, snapToken, snapRedirectUrl };
     } catch (e) {
-      return e.error_messages;
+      // console.log(e.error_messages);
+      // return { bookingId, snapToken, snapRedirectUrl, e.error_messages };
+      console.log(e);
+      throw new InvariantError(e);
     }
   }
 
   async midtransNotification(notificationJson) {
-    const statusResponse = this._snap.transaction.notification(notificationJson);
+    const statusResponse = await this._snap.transaction.notification(notificationJson);
 
     const orderId = statusResponse.order_id;
     const transactionStatus = statusResponse.transaction_status;
     const fraudStatus = statusResponse.fraud_status;
 
-    const hash = crypto.createHash('sha512').update(`${statusResponse.transaction_id}${statusResponse.status_code}${statusResponse.gross_amount}${process.env.MIDTRANS_SERVER_KEY}`);
+    const hash = crypto.createHash('sha512').update(`${orderId}${statusResponse.status_code}${statusResponse.gross_amount}${process.env.MIDTRANS_SERVER_KEY}`).digest('hex');
+    console.log('hash', hash);
+    console.log('statusResponse.transaction_id', statusResponse.transaction_id);
 
     if (hash !== statusResponse.signature_key) {
       const message = 'Invalid Signature Key';
+      console.log('ea');
       return {
         message,
         orderId,
