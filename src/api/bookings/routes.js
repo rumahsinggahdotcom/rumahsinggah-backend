@@ -31,14 +31,11 @@ const routes = (handler) => [
       auth: 'kossapp_jwt',
     },
   },
-  // {
-  //   method: 'POST',
-  //   path: '/koss/booking/payment',
-  //   handler: handler.postMidtransTransactionHandler,
-  //   options: {
-  //     auth: 'kossapp_jwt',
-  //   },
-  // },
+  {
+    method: 'POST',
+    path: '/booking/midtransnotification',
+    handler: handler.midtransNotificationHandler,
+  },
 ];
 
 module.exports = routes;
