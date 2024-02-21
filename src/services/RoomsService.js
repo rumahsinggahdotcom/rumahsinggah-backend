@@ -117,7 +117,7 @@ class RoomService {
         FROM rooms as r 
         LEFT JOIN image_rooms as i 
         ON r.id = i.room_id 
-        WHERE kos_id = $1`,
+        WHERE r.kos_id = $1`,
         values: [kosId],
       };
 
