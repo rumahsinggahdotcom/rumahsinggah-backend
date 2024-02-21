@@ -126,7 +126,7 @@ class KossService {
             address: item.address,
             description: item.description,
             image: [{
-              image_id: item.id,
+              image_id: item.image_id,
               image: item.image,
             }],
           });
@@ -150,6 +150,40 @@ class KossService {
         isCache: 1,
       };
     } catch (error) {
+      const queryRoomsKos = {
+        text: `SELECT r.id as room_id, r.type, r.price, i.id as image_room_id, i.image 
+        FROM rooms as r
+        LEFT JOIN image_rooms as i 
+        ON r.id = i.room_id
+        WHERE r.kos_id = $1`,
+        values: [kosId],
+      };
+
+      const { rows } = await this._pool.query(queryRoomsKos);
+      const groupedData = rows.reduce((result, item) => {
+        const existingItem = result.find((groupedItem) => groupedItem.room_id === item.room_id);
+
+        if (existingItem) {
+          existingItem.image.push({
+            image_room_id: item.image_room_id,
+            image: item.image,
+          });
+        } else {
+          result.push({
+            room_id: item.room_id,
+            type: item.type,
+            price: item.price,
+            image: [{
+              image_room_id: item.image_room_id,
+              image: item.image,
+            }],
+          });
+        }
+
+        return result;
+      }, []);
+
+      const rooms = groupedData.map(mapDBToModel);
       const queryImageKos = {
         text: 'SELECT id as image_id, image FROM image_koss WHERE kos_id = $1',
         values: [kosId],
@@ -164,10 +198,13 @@ class KossService {
       if (!resultKos.rows) {
         throw new NotFoundError('Kos Tidak Ditemukan.');
       }
+
       const kos = resultKos.rows[0];
+      kos.rooms = rooms;
       kos.image = resultImageKos.rows;
 
       await this._cacheService.set(`kosId:${kosId}`, JSON.stringify(kos));
+      console.log(kos);
       return { kos };
     }
   }
