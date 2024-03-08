@@ -169,9 +169,11 @@ class RoomService {
       };
     } catch (error) {
       const queryRoom = {
-        text: `SELECT id, kos_id, type, max_people, quantity, description 
-        FROM rooms 
-        WHERE id = $1`,
+        text: `SELECT r.id, r.kos_id, r.type, r.max_people, r.quantity, r.price, r.description, k.name
+        FROM rooms as r
+        LEFT JOIN koss as k
+        ON r.kos_id = k.id
+        WHERE r.id = $1`,
         values: [id],
       };
 
