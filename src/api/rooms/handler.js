@@ -107,9 +107,7 @@ class RoomsHandler {
 
     const response = h.response({
       status: 'success',
-      data: {
-        room,
-      },
+      data: room,
     });
 
     if (isCache) {
