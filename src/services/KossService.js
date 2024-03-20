@@ -151,23 +151,42 @@ class KossService {
       };
     } catch (error) {
       const queryRoomsKos = {
-        text: `SELECT r.id as room_id, r.type, r.price, i.id as image_room_id, i.image 
-        FROM rooms as r
-        LEFT JOIN image_rooms as i 
+        text: `SELECT r.id AS room_id, r.type, r.price, i.id as image_room_id, i.image, b.start, 
+        b.end, u.id AS user_id, u.fullname, u.gender, u.phone_number
+        FROM rooms AS r
+        LEFT JOIN image_rooms AS i
         ON r.id = i.room_id
-        WHERE r.kos_id = $1`,
-        values: [kosId],
+        LEFT JOIN bookings AS b
+        ON r.id = b.room_id
+        LEFT JOIN users AS u
+        ON b.user_id = u.id
+        WHERE r.kos_id = $1 AND b.status = $2`,
+        values: [kosId, 'paid'],
       };
 
       const { rows } = await this._pool.query(queryRoomsKos);
       const groupedData = rows.reduce((result, item) => {
-        const existingItem = result.find((groupedItem) => groupedItem.room_id === item.room_id);
-
-        if (existingItem) {
-          existingItem.image.push({
-            image_room_id: item.image_room_id,
-            image: item.image,
-          });
+        const existingRoom = result.find(
+          (groupedRoom) => groupedRoom.room_id === item.room_id,
+        );
+        // const existingUser = result.find((groupedItem) => groupedItem.user_id === item.user_id);
+        if (existingRoom) {
+          if (!existingRoom.image.some((image) => image.image_room_id === item.image_room_id)) {
+            existingRoom.image.push({
+              image_room_id: item.image_room_id,
+              image: item.image,
+            });
+          }
+          if (!existingRoom.occupant.some((occupant) => occupant.user_id === item.user_id)) {
+            existingRoom.occupant.push({
+              user_id: item.user_id,
+              fullname: item.fullname,
+              gender: item.gender,
+              phone_number: item.phone_number,
+              start: item.start,
+              end: item.end,
+            });
+          }
         } else {
           result.push({
             room_id: item.room_id,
@@ -177,9 +196,16 @@ class KossService {
               image_room_id: item.image_room_id,
               image: item.image,
             }],
+            occupant: [{
+              user_id: item.user_id,
+              fullname: item.fullname,
+              gender: item.gender,
+              phone_number: item.phone_number,
+              start: item.start,
+              end: item.end,
+            }],
           });
         }
-
         return result;
       }, []);
 
@@ -204,7 +230,7 @@ class KossService {
       kos.image = resultImageKos.rows;
 
       await this._cacheService.set(`kosId:${kosId}`, JSON.stringify(kos));
-      console.log(kos);
+      console.log('kos', kos);
       return { kos };
     }
   }
