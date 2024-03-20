@@ -18,6 +18,7 @@ const mapDBToModel = ({
   price,
   quantity,
   image,
+  occupant,
   room_id,
   image_room_id,
   start,
@@ -47,6 +48,7 @@ const mapDBToModel = ({
   price,
   quantity,
   image,
+  occupant,
   roomId: room_id,
   imageRoomId: image_room_id,
   start,
@@ -61,12 +63,6 @@ const mapDBToModel = ({
 
 /* assign images payload to array */
 const assignImageToArray = (images) => {
-  // console.log(images._data.length);
-  // if (!isEmpty(images._data.length)) {
-  //   console.log('eyy');
-  // }
-  // console.log(images.length);
-  // console.log(images._data.length);
   let arrayImgs = [];
   if (!Array.isArray(images)) {
     if (images._data.length > 0) arrayImgs.push(images);
