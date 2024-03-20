@@ -170,6 +170,7 @@ class KossService {
           (groupedRoom) => groupedRoom.room_id === item.room_id,
         );
         // const existingUser = result.find((groupedItem) => groupedItem.user_id === item.user_id);
+        console.log('existingRoom', existingRoom);
         if (existingRoom) {
           if (!existingRoom.image.some((image) => image.image_room_id === item.image_room_id)) {
             existingRoom.image.push({
@@ -177,12 +178,12 @@ class KossService {
               image: item.image,
             });
           }
-          if (!existingRoom.occupant.some((occupant) => occupant.user_id === item.user_id)) {
-            existingRoom.occupant.push({
-              user_id: item.user_id,
+          if (!existingRoom.occupants.some((occupant) => occupant.userId === item.user_id)) {
+            existingRoom.occupants.push({
+              userId: item.user_id,
               fullname: item.fullname,
               gender: item.gender,
-              phone_number: item.phone_number,
+              phoneNumber: item.phone_number,
               start: item.start,
               end: item.end,
             });
@@ -196,11 +197,11 @@ class KossService {
               image_room_id: item.image_room_id,
               image: item.image,
             }],
-            occupant: [{
-              user_id: item.user_id,
+            occupants: [{
+              userId: item.user_id,
               fullname: item.fullname,
               gender: item.gender,
-              phone_number: item.phone_number,
+              phoneNumber: item.phone_number,
               start: item.start,
               end: item.end,
             }],
