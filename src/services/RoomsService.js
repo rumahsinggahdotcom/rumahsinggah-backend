@@ -190,8 +190,21 @@ class RoomService {
 
       const resultImageRoom = await this._pool.query(queryImageroom);
 
+      const queryOccupantsRooms = {
+        text: `SELECT b.start, b.end, b.status, u.id as user_id, u.fullname, u.gender, u.phone_number
+        FROM bookings as b
+        LEFT JOIN users as u
+        ON b.user_id = u.id
+        WHERE b.room_id = $1 AND b.status = $2`,
+        values: [id, 'paid'],
+      };
+
+      const resultOccupants = await this._pool.query(queryOccupantsRooms);
+      console.log('resultOccupants.rows', resultOccupants.rows);
+
       const roomData = resultRoom.rows[0];
       roomData.image = resultImageRoom.rows;
+      roomData.occupants = resultOccupants.rows;
 
       await this._cacheService.set(`roomId:${id}`, JSON.stringify(roomData));
       return { room: roomData };
