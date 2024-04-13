@@ -80,7 +80,7 @@ const init = async () => {
   // const mongoose = new Mongoose();
 
   const server = hapi.server({
-    port: process.env.PORT,
+    port: process.env.PORT || 3000,
     host: process.env.NODE_ENV !== 'production' ? 'localhost' : '0.0.0.0',
     routes: {
       cors: {
