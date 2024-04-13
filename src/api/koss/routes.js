@@ -1,3 +1,5 @@
+const path = require('path');
+
 const kossRoutes = (handler) => [
   {
     method: 'POST',
@@ -47,13 +49,21 @@ const kossRoutes = (handler) => [
   },
   {
     method: 'DELETE',
-    path: '/koss/{id}/images/{imageId}',
+    path: '/koss/{kosId}/images/{imageId}',
     handler: handler.delImageKosByIdHandler,
     options: {
       auth: 'kossapp_jwt',
     },
   },
-
+  {
+    method: 'GET',
+    path: '/file/koss/{param*}',
+    handler: {
+      directory: {
+        path: path.resolve(__dirname, '..', 'file/koss'),
+      },
+    },
+  },
   // Owners Koss
   {
     method: 'GET',

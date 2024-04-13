@@ -14,6 +14,10 @@ exports.up = (pgm) => {
       type: 'VARCHAR',
       notNull: true,
     },
+    owner_id: {
+      type: 'VARCHAR',
+      notNull: true,
+    },
     start: {
       type: 'DATE',
       notNull: true,
@@ -22,13 +26,21 @@ exports.up = (pgm) => {
       type: 'DATE',
       notNull: true,
     },
-    owner_id: {
-      type: 'VARCHAR',
+    total_price: {
+      type: 'INTEGER',
       notNull: true,
     },
     status: {
       type: 'VARCHAR',
       notNull: true,
+    },
+    snap_token: {
+      type: 'VARCHAR',
+      notNull: false,
+    },
+    snap_redirect_url: {
+      type: 'VARCHAR',
+      notNull: false,
     },
   });
 

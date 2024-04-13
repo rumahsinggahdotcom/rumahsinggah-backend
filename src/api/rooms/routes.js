@@ -1,7 +1,9 @@
+const path = require('path');
+
 const routes = (handler) => [
   {
     method: 'POST',
-    path: '/koss/room',
+    path: '/rooms',
     handler: handler.postRoomHandler,
     options: {
       payload: {
@@ -15,7 +17,7 @@ const routes = (handler) => [
   },
   {
     method: 'POST',
-    path: '/koss/{kosId}/room/images',
+    path: '/rooms/images',
     handler: handler.postRoomImagesHandler,
     options: {
       payload: {
@@ -34,12 +36,21 @@ const routes = (handler) => [
   },
   {
     method: 'GET',
-    path: '/koss/{kosId}/room/{roomId}',
+    path: '/rooms/{roomId}',
     handler: handler.getRoomByIdHandler,
   },
   {
+    method: 'GET',
+    path: '/file/rooms/{param*}',
+    handler: {
+      directory: {
+        path: path.resolve(__dirname, '..', 'file/rooms'),
+      },
+    },
+  },
+  {
     method: 'PUT',
-    path: '/koss/{kosId}/room/{roomId}',
+    path: '/rooms/{roomId}',
     handler: handler.putRoomByIdHandler,
     options: {
       auth: 'kossapp_jwt',
@@ -47,7 +58,7 @@ const routes = (handler) => [
   },
   {
     method: 'DELETE',
-    path: '/room/{roomId}/image/{imageId}',
+    path: '/rooms/{roomId}/image/{imageId}',
     handler: handler.delImageRoomByIdHandler,
     options: {
       auth: 'kossapp_jwt',

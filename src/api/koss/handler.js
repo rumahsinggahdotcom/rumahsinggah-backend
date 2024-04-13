@@ -2,16 +2,15 @@ const autobind = require('auto-bind');
 const { assignImageToArray } = require('../../utils');
 
 class KossHandler {
-  constructor(kossService, storageService, validator) {
+  constructor(kossService, ownersService, validator) {
     this._kossService = kossService;
-    this._storageService = storageService;
+    this._ownersService = ownersService;
     this._validator = validator;
     autobind(this);
   }
 
   async postKosHandler(request, h) {
     const {
-      // ownerId,
       name,
       address,
       description,
@@ -21,16 +20,17 @@ class KossHandler {
     const { id: credentialId } = request.auth.credentials;
     const arrayImgs = assignImageToArray(images);
 
+    await this._ownersService.verifyOwnersOnly(credentialId);
+
     // Validate Kos Payload
     await this._validator.validateKosPayload({
-      ownerId: credentialId,
       name,
       address,
       description,
     });
 
     // Validate Image Kos Payload
-    if (arrayImgs.length > 1) {
+    if (arrayImgs.length > 0) {
       await Promise.all(arrayImgs.map(async (image) => {
         await this._validator.validateImageKosPayload(image.hapi.headers);
       }));
@@ -102,9 +102,7 @@ class KossHandler {
 
     const response = h.response({
       status: 'success',
-      data: {
-        kos,
-      },
+      data: kos,
     });
 
     if (isCache) {
@@ -155,14 +153,11 @@ class KossHandler {
   }
 
   async delImageKosByIdHandler(request, h) {
-    const { id, imageId } = request.params;
+    const { kosId, imageId } = request.params;
     const { id: credentialId } = request.auth.credentials;
-    // const { imageId } = request.payload;
 
-    await this._kossService.verifyKosAccess(id, credentialId);
-
-    const filename = await this._kossService.delImageKosById(id, imageId);
-    await this._storageService.deleteFile(filename, 'koss');
+    await this._kossService.verifyKosAccess(kosId, credentialId);
+    await this._kossService.delImageKosById(kosId, imageId);
 
     const response = h.response({
       status: 'success',

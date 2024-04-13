@@ -3,9 +3,9 @@ const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const InvariantError = require('../exceptions/InvariantError');
 const NotFoundError = require('../exceptions/NotFoundError');
+const AuthorizationError = require('../exceptions/AuthorizationError');
 const AuthenticationError = require('../exceptions/AuthenticationError');
 const { mapDBToModel } = require('../utils');
-// const AuthenticationError = require('../exceptions/AuthenticationError');
 
 class OwnersService {
   constructor() {
@@ -132,18 +132,30 @@ class OwnersService {
       values: [username],
     };
     const result = await this._pool.query(query);
-    // console.log(result);
     if (!result.rows.length) {
-      throw new AuthenticationError('Kredensial yang anda berikan salah.');
+      throw new AuthenticationError('Username atau password yang anda berikan salah.');
     }
     const { id, password: hashedPassword } = result.rows[0];
     const match = await bcrypt.compare(password, hashedPassword);
 
     if (!match) {
-      throw new AuthenticationError('Kredensial yang anda berikan salah.');
+      throw new AuthenticationError('Username atau password yang anda berikan salah.');
     }
 
     return id;
+  }
+
+  async verifyOwnersOnly(id) {
+    const query = {
+      text: 'SELECT id FROM owners WHERE id = $1',
+      values: [id],
+    };
+
+    const { rows } = await this._pool.query(query);
+
+    if (!rows.length) {
+      throw new AuthorizationError('Anda tidak berhak mengakses resources ini');
+    }
   }
 }
 

@@ -1,33 +1,32 @@
 /* eslint-disable camelcase */
 
-// exports.shorthands = undefined;
+exports.shorthands = undefined;
 
 exports.up = (pgm) => {
-  pgm.createTable('koss', {
+  pgm.createTable('reviews', {
     id: {
       type: 'VARCHAR',
       primaryKey: true,
     },
-    owner_id: {
+    user_id: {
       type: 'VARCHAR',
       notNull: true,
     },
-    name: {
+    kos_id: {
       type: 'VARCHAR',
       notNull: true,
     },
-    address: {
-      type: 'VARCHAR',
+    score: {
+      type: 'INTEGER',
       notNull: true,
     },
-    description: {
+    review: {
       type: 'VARCHAR',
       notNull: true,
     },
   });
-  pgm.addConstraint('koss', 'fk_koss.owner_id_owners.id', 'FOREIGN KEY(owner_id) REFERENCES owners(id) ON DELETE CASCADE');
 };
 
 exports.down = (pgm) => {
-  pgm.dropTable('koss');
+  pgm.dropTable('reviews');
 };

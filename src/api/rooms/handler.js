@@ -3,10 +3,9 @@ const { assignImageToArray } = require('../../utils');
 const InvariantError = require('../../exceptions/InvariantError');
 
 class RoomsHandler {
-  constructor(roomsService, kossService, storageService, validator) {
+  constructor(roomsService, kossService, validator) {
     this._roomsService = roomsService;
     this._kossService = kossService;
-    this._storageService = storageService;
     this._validator = validator;
     autoBind(this);
   }
@@ -31,7 +30,7 @@ class RoomsHandler {
 
     if (arrayImgs.length > 0) {
       await Promise.all(arrayImgs.map(async (image) => {
-        this._validator.validateImageRoomPayload(image);
+        await this._validator.validateImageRoomPayload(image);
       }));
     }
 
@@ -57,20 +56,19 @@ class RoomsHandler {
   }
 
   async postRoomImagesHandler(request, h) {
-    const { kosId } = request.params;
-    const { roomId, images } = request.payload;
+    const { id, images } = request.payload;
     const { id: credentialId } = request.auth.credentials;
     const arrayImgs = assignImageToArray(images);
 
-    await this._roomsService.verifyRoomAccess(roomId, credentialId);
+    await this._roomsService.verifyRoomAccess(id, credentialId);
 
     if (arrayImgs.length === 0) throw new InvariantError('Image tidak ada');
 
-    Promise.all(arrayImgs.map(async (image) => {
+    await Promise.all(arrayImgs.map(async (image) => {
       await this._validator.validateImageRoomPayload(image);
     }));
 
-    const imgsId = await this._roomsService.addImageRoom(kosId, roomId, arrayImgs);
+    const imgsId = await this._roomsService.addImageRoom(id, arrayImgs);
 
     const response = h.response({
       status: 'success',
@@ -87,7 +85,6 @@ class RoomsHandler {
   async getRoomsByKosIdHandler(request, h) {
     const { kosId } = request.params;
     const { rooms, isCache } = await this._roomsService.getRoomsByKosId(kosId);
-    console.log(isCache);
 
     const response = h.response({
       status: 'success',
@@ -110,14 +107,28 @@ class RoomsHandler {
 
     const response = h.response({
       status: 'success',
-      data: {
-        room,
-      },
+      data: room,
     });
 
     if (isCache) {
       response.header('X-Data-Source', 'cache');
     }
+
+    response.code(200);
+    return response;
+  }
+
+  async getPriceByRoomIdHandler(request, h) {
+    const { duration } = request.query;
+    const { id } = request.params;
+    const price = await this._roomsService.getPriceByRoomId(id, duration);
+
+    const response = h.response({
+      status: 'success',
+      data: {
+        price,
+      },
+    });
 
     response.code(200);
     return response;
@@ -156,17 +167,16 @@ class RoomsHandler {
   async delImageRoomByIdHandler(request, h) {
     const { roomId, imageId } = request.params;
     const { id: credentialId } = request.auth.credentials;
-    // const { imageId } = request.payload;
+
     await this._roomsService.verifyRoomAccess(roomId, credentialId);
-    const filename = await this._roomsService.delImageRoomById(roomId, imageId);
-    await this._storageService.deleteFile(filename, 'rooms');
+    await this._roomsService.delImageRoomById(roomId, imageId);
 
     const response = h.response({
       status: 'success',
       message: 'Image Room berhasil dihapus',
     });
-
     response.code(200);
+
     return response;
   }
 }

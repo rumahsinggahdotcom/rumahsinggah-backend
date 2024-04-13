@@ -2,7 +2,7 @@ const Joi = require('joi');
 
 const RoomsPayloadSchema = Joi.object({
   type: Joi.string().required(),
-  maxPeople: Joi.string().required(),
+  maxPeople: Joi.number().integer().options({ convert: false }).required(),
   price: Joi.number().integer().options({ convert: false }).required(),
   quantity: Joi.number().integer().options({ convert: false }).required(),
 });
