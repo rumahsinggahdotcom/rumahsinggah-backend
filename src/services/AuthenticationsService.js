@@ -30,11 +30,15 @@ class AuthenticationsService {
 
   async deleteRefreshToken(token) {
     const query = {
-      text: 'DELETE FROM authentications WHERE token = $1',
+      text: 'DELETE FROM authentications WHERE token = $1 RETURNING token',
       values: [token],
     };
 
-    await this._pool.query(query);
+    const { rows } = await this._pool.query(query);
+
+    if (!rows.length) {
+      throw new NotFoundError('Refresh token tidak valid');
+    }
   }
 }
 

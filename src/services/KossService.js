@@ -6,10 +6,10 @@ const AuthenticationError = require('../exceptions/AuthenticationError');
 const { mapDBToModel } = require('../utils');
 
 class KossService {
-  constructor(cacheService, storageService) {
+  constructor(storageService) {
     this._pool = new Pool();
     this._storageService = storageService;
-    this._cacheService = cacheService;
+    // this._cacheService = cacheService;
   }
 
   async addKos({
@@ -40,9 +40,9 @@ class KossService {
         }));
       }
       await client.query('COMMIT');
-      await this._cacheService.delete('koss');
-      await this._cacheService.delete(`kosId:${id}`);
-      await this._cacheService.delete(`ownerkoss:${ownerId}`);
+      // await this._cacheService.delete('koss');
+      // await this._cacheService.delete(`kosId:${id}`);
+      // await this._cacheService.delete(`ownerkoss:${ownerId}`);
       return rows[0].id;
     } catch (error) {
       await client.query('ROLLBACK');
@@ -63,9 +63,9 @@ class KossService {
         }));
       }
       await client.query('COMMIT');
-      await this._cacheService.delete('koss');
-      await this._cacheService.delete(`kosId:${id}`);
-      await this._cacheService.delete(`ownerkoss:${ownerId}`);
+      // await this._cacheService.delete('koss');
+      // await this._cacheService.delete(`kosId:${id}`);
+      // await this._cacheService.delete(`ownerkoss:${ownerId}`);
 
       return imgsId;
     } catch (error) {
@@ -94,206 +94,138 @@ class KossService {
   }
 
   async getKoss() {
-    try {
-      const koss = await this._cacheService.get('koss');
-      return {
-        koss,
-        isCache: 1,
-      };
-    } catch (error) {
-      const query = {
-        text: `SELECT k.id, k.owner_id, k.name, k.address, k.description, i.id as image_id, i.image 
-        FROM koss AS k 
-        LEFT JOIN image_koss AS i 
-        ON k.id = i.kos_id`,
-      };
+    const query = {
+      text: `SELECT k.id, k.owner_id, k.name, k.address, k.description, i.id as image_id, i.image 
+      FROM koss AS k 
+      LEFT JOIN image_koss AS i 
+      ON k.id = i.kos_id`,
+    };
 
-      const { rows } = await this._pool.query(query);
+    const { rows } = await this._pool.query(query);
 
-      const groupedData = rows.reduce((result, item) => {
-        const existingItem = result.find((groupedItem) => groupedItem.id === item.id);
+    const groupedData = rows.reduce((result, item) => {
+      const existingItem = result.find((groupedItem) => groupedItem.id === item.id);
 
-        if (existingItem) {
-          existingItem.image.push({
+      if (existingItem) {
+        existingItem.image.push({
+          image_id: item.image_id,
+          image: item.image,
+        });
+      } else {
+        result.push({
+          id: item.id,
+          owner_id: item.owner_id,
+          name: item.name,
+          address: item.address,
+          description: item.description,
+          image: [{
             image_id: item.image_id,
             image: item.image,
-          });
-        } else {
-          result.push({
-            id: item.id,
-            owner_id: item.owner_id,
-            name: item.name,
-            address: item.address,
-            description: item.description,
-            image: [{
-              image_id: item.image_id,
-              image: item.image,
-            }],
-          });
-        }
-
-        return result;
-      }, []);
-
-      const koss = groupedData.map(mapDBToModel);
-      await this._cacheService.set('koss', JSON.stringify(koss));
-
-      return { koss };
-    }
-  }
-
-  async getKosById(kosId) {
-    try {
-      const kos = await this._cacheService.get(`kosId:${kosId}`);
-      return {
-        kos,
-        isCache: 1,
-      };
-    } catch (error) {
-      // const queryRoomsKos = {
-      //   text: `SELECT r.id AS room_id, r.type, r.price, i.id as image_room_id, i.image, b.start,
-      //   b.end, b.status, u.id AS user_id, u.fullname, u.gender, u.phone_number
-      //   FROM rooms AS r
-      //   LEFT JOIN image_rooms AS i
-      //   ON r.id = i.room_id
-      //   LEFT JOIN bookings AS b
-      //   ON r.id = b.room_id
-      //   LEFT JOIN users AS u
-      //   ON b.user_id = u.id
-      //   WHERE r.kos_id = $1`,
-      //   values: [kosId],
-      // };
-      const queryRoomsKos = {
-        text: `SELECT r.id AS room_id, r.type, r.price, i.id as image_room_id, i.image
-        FROM rooms AS r
-        LEFT JOIN image_rooms AS i
-        ON r.id = i.room_id
-        WHERE r.kos_id = $1`,
-        values: [kosId],
-      };
-
-      const { rows } = await this._pool.query(queryRoomsKos);
-      // console.log('rows', rows);
-      // const groupedData = rows.reduce((result, item) => {
-      //   const existingRoom = result.find(
-      //     (groupedRoom) => groupedRoom.room_id === item.room_id,
-      //   );
-      //   const existingUser = result.find((groupedItem) => groupedItem.user_id === item.user_id);
-      //   console.log('existingRoom', existingRoom);
-      //   if (existingRoom) {
-      //     if (!existingRoom.image.some((image) => image.image_room_id === item.image_room_id)) {
-      //       existingRoom.image.push({
-      //         image_room_id: item.image_room_id,
-      //         image: item.image,
-      //       });
-      //     }
-      //     if (!existingRoom.occupants.some((occupant) => occupant.userId === item.user_id)) {
-      //       if (existingRoom.occupants.some((occupant) => occupant.status === 'paid')) {
-      //         existingRoom.occupants.push({
-      //           userId: item.user_id,
-      //           fullname: item.fullname,
-      //           gender: item.gender,
-      //           phoneNumber: item.phone_number,
-      //           start: item.start,
-      //           end: item.end,
-      //         });
-      //       }
-      //     }
-      //   } else {
-      //     result.push({
-      //       room_id: item.room_id,
-      //       type: item.type,
-      //       price: item.price,
-      //       image: [{
-      //         image_room_id: item.image_room_id,
-      //         image: item.image,
-      //       }],
-      //       occupants: [{
-      //         userId: item.user_id,
-      //         fullname: item.fullname,
-      //         gender: item.gender,
-      //         phoneNumber: item.phone_number,
-      //         start: item.start,
-      //         end: item.end,
-      //       }],
-      //     });
-      //   }
-      //   return result;
-      // }, []);
-      const groupedData = rows.reduce((result, item) => {
-        const existingRoom = result.find(
-          (groupedRoom) => groupedRoom.room_id === item.room_id,
-        );
-        // const existingUser = result.find((groupedItem) => groupedItem.user_id === item.user_id);
-        if (existingRoom) {
-          existingRoom.image.push({
-            image_room_id: item.image_room_id,
-            image: item.image,
-          });
-        } else {
-          result.push({
-            room_id: item.room_id,
-            type: item.type,
-            price: item.price,
-            image: [{
-              image_room_id: item.image_room_id,
-              image: item.image,
-            }],
-          });
-        }
-        return result;
-      }, []);
-
-      const rooms = groupedData.map(mapDBToModel);
-      console.log('rooms', rooms);
-      const queryOccupants = {
-        text: `SELECT r.id as room_id, b.start, b.end, b.status, u.id AS user_id, u.fullname,
-          u.gender, u.phone_number
-          FROM rooms AS r
-          LEFT JOIN bookings AS b
-          ON r.id = b.room_id
-          LEFT JOIN users AS u
-          ON u.id = b.user_id
-          WHERE r.kos_id = $1 AND b.status = $2`,
-        values: [kosId, 'paid'],
-      };
-      const resultQueryOccupants = await this._pool.query(queryOccupants);
-      console.log('resultQueryOccupants.rows', resultQueryOccupants.rows);
-      const roomMerged = [];
-      for (let i = 0; i < rooms.length; i += 1) {
-        roomMerged.push({
-          ...rooms[i],
-          occupants: resultQueryOccupants.rows.filter(
-            (occupant) => occupant.room_id === rooms[i].roomId,
-          ),
+          }],
         });
       }
 
-      console.log('roomMerged', roomMerged);
-      const queryImageKos = {
-        text: 'SELECT id as image_id, image FROM image_koss WHERE kos_id = $1',
-        values: [kosId],
-      };
-      const resultImageKos = await this._pool.query(queryImageKos);
+      return result;
+    }, []);
 
-      const queryKos = {
-        text: 'SELECT * FROM koss where id = $1',
-        values: [kosId],
-      };
-      const resultKos = await this._pool.query(queryKos);
-      if (!resultKos.rows) {
-        throw new NotFoundError('Kos Tidak Ditemukan.');
+    const koss = groupedData.map(mapDBToModel);
+    // await this._cacheService.set('koss', JSON.stringify(koss));
+
+    return { koss };
+  }
+
+  async getKosById(kosId) {
+    const queryRoomsKos = {
+      text: `SELECT r.id AS room_id, r.type, r.price, i.id as image_room_id, i.image
+      FROM rooms AS r
+      LEFT JOIN image_rooms AS i
+      ON r.id = i.room_id
+      WHERE r.kos_id = $1`,
+      values: [kosId],
+    };
+
+    const { rows } = await this._pool.query(queryRoomsKos);
+    const groupedData = rows.reduce((result, item) => {
+      const existingRoom = result.find(
+        (groupedRoom) => groupedRoom.room_id === item.room_id,
+      );
+      if (existingRoom) {
+        existingRoom.image.push({
+          image_room_id: item.image_room_id,
+          image: item.image,
+        });
+      } else {
+        result.push({
+          room_id: item.room_id,
+          type: item.type,
+          price: item.price,
+          image: [{
+            image_room_id: item.image_room_id,
+            image: item.image,
+          }],
+        });
       }
+      return result;
+    }, []);
 
-      const kos = resultKos.rows[0];
-      // kos.rooms = rooms;
-      kos.rooms = roomMerged;
-      kos.image = resultImageKos.rows;
-
-      await this._cacheService.set(`kosId:${kosId}`, JSON.stringify(kos));
-      console.log('kos', kos);
-      return { kos };
+    const rooms = groupedData.map(mapDBToModel);
+    console.log('rooms', rooms);
+    const queryOccupants = {
+      text: `SELECT r.id as room_id, b.start, b.end, b.status, u.id AS user_id, u.fullname,
+        u.gender, u.phone_number
+        FROM rooms AS r
+        LEFT JOIN bookings AS b
+        ON r.id = b.room_id
+        LEFT JOIN users AS u
+        ON u.id = b.user_id
+        WHERE r.kos_id = $1 AND b.status = $2`,
+      values: [kosId, 'paid'],
+    };
+    const resultQueryOccupants = await this._pool.query(queryOccupants);
+    console.log('resultQueryOccupants.rows', resultQueryOccupants.rows);
+    const roomMerged = [];
+    for (let i = 0; i < rooms.length; i += 1) {
+      roomMerged.push({
+        ...rooms[i],
+        occupants: resultQueryOccupants.rows.filter(
+          (occupant) => occupant.room_id === rooms[i].roomId,
+        ),
+      });
     }
+
+    console.log('roomMerged', roomMerged);
+    const queryImageKos = {
+      text: 'SELECT id as image_id, image FROM image_koss WHERE kos_id = $1',
+      values: [kosId],
+    };
+    const resultImageKos = await this._pool.query(queryImageKos);
+
+    const queryKos = {
+      text: 'SELECT * FROM koss where id = $1',
+      values: [kosId],
+    };
+    const resultKos = await this._pool.query(queryKos);
+    if (!resultKos.rows) {
+      throw new NotFoundError('Kos Tidak Ditemukan.');
+    }
+
+    const kos = resultKos.rows[0];
+    // kos.rooms = rooms;
+    kos.rooms = roomMerged;
+    kos.image = resultImageKos.rows;
+
+    // await this._cacheService.set(`kosId:${kosId}`, JSON.stringify(kos));
+    console.log('kos', kos);
+    return { kos };
+    // try {
+    //   const kos = await this._cacheService.get(`kosId:${kosId}`);
+    //   return {
+    //     kos,
+    //     isCache: 1,
+    //   };
+    // } catch (error) {
+      
+    // }
   }
 
   async editKosById(id, {
@@ -310,9 +242,9 @@ class KossService {
     if (!rows[0].id) {
       throw new InvariantError('Gagal memperbarui Kos. Id tidak ditemukan.');
     }
-    await this._cacheService.delete('koss');
-    await this._cacheService.delete(`kosId:${id}`);
-    await this._cacheService.delete(`ownerkoss:${rows[0].owner_id}`);
+    // await this._cacheService.delete('koss');
+    // await this._cacheService.delete(`kosId:${id}`);
+    // await this._cacheService.delete(`ownerkoss:${rows[0].owner_id}`);
   }
 
   async delImageKosById(kosId, imageId) {
@@ -335,51 +267,52 @@ class KossService {
       console.log('Image tidak ditemukan di storage, message: ', err.message);
     }
 
-    await this._cacheService.delete('koss');
-    await this._cacheService.delete(`kosId:${kosId}`);
+    // await this._cacheService.delete('koss');
+    // await this._cacheService.delete(`kosId:${kosId}`);
   }
 
   async getOwnerKoss({ owner }) {
-    try {
-      const koss = await this._cacheService.get(`ownerkoss:${owner}`);
-      return {
-        ownerKoss: koss,
-        isCache: 1,
-      };
-    } catch (error) {
-      const query = {
-        text: 'SELECT k.id, k.owner_id, k.name, k.address, k.description, i.image FROM koss as k LEFT JOIN image_koss as i ON k.id = i.kos_id WHERE k.owner_id = $1',
-        values: [owner],
-      };
+    const query = {
+      text: 'SELECT k.id, k.owner_id, k.name, k.address, k.description, i.image FROM koss as k LEFT JOIN image_koss as i ON k.id = i.kos_id WHERE k.owner_id = $1',
+      values: [owner],
+    };
 
-      const { rows } = await this._pool.query(query);
+    const { rows } = await this._pool.query(query);
 
-      if (!rows.length) {
-        throw new InvariantError('Kos tidak ditemukan');
+    if (!rows.length) {
+      throw new InvariantError('Kos tidak ditemukan');
+    }
+
+    const groupedData = rows.reduce((result, item) => {
+      const existingItem = result.find((resultData) => resultData.id === item.id);
+      if (existingItem) {
+        existingItem.image.push({ image: item.image });
+      } else {
+        result.push({
+          id: item.id,
+          owner_id: item.owner_id,
+          name: item.name,
+          address: item.address,
+          description: item.description,
+          image: [{ image: item.image }],
+        });
       }
 
-      const groupedData = rows.reduce((result, item) => {
-        const existingItem = result.find((resultData) => resultData.id === item.id);
-        if (existingItem) {
-          existingItem.image.push({ image: item.image });
-        } else {
-          result.push({
-            id: item.id,
-            owner_id: item.owner_id,
-            name: item.name,
-            address: item.address,
-            description: item.description,
-            image: [{ image: item.image }],
-          });
-        }
+      return result;
+    }, []);
 
-        return result;
-      }, []);
+    // await this._cacheService.set(`ownerkoss:${owner}`, JSON.stringify(groupedData));
 
-      await this._cacheService.set(`ownerkoss:${owner}`, JSON.stringify(groupedData));
-
-      return { ownerKoss: groupedData };
-    }
+    return { ownerKoss: groupedData };
+    // try {
+    //   const koss = await this._cacheService.get(`ownerkoss:${owner}`);
+    //   return {
+    //     ownerKoss: koss,
+    //     isCache: 1,
+    //   };
+    // } catch (error) {
+      
+    // }
   }
 
   async verifyKosAccess(id, credentialId) {

@@ -82,32 +82,34 @@ class KossHandler {
   }
 
   async getKossHandler(request, h) {
-    const { koss, isCache } = await this._kossService.getKoss();
+    const { koss } = await this._kossService.getKoss();
+    // const { koss, isCache } = await this._kossService.getKoss();
 
     const response = h.response({
       status: 'success',
       data: koss,
     });
 
-    if (isCache) {
-      response.header('X-Data-Source', 'cache');
-    }
+    // if (isCache) {
+    //   response.header('X-Data-Source', 'cache');
+    // }
     response.code(200);
     return response;
   }
 
   async getKosByIdHandler(request, h) {
     const { id } = request.params;
-    const { kos, isCache } = await this._kossService.getKosById(id);
+    const { kos } = await this._kossService.getKosById(id);
+    // const { kos, isCache } = await this._kossService.getKosById(id);
 
     const response = h.response({
       status: 'success',
       data: kos,
     });
 
-    if (isCache) {
-      response.header('X-Data-Source', 'cache');
-    }
+    // if (isCache) {
+    //   response.header('X-Data-Source', 'cache');
+    // }
 
     response.code(200);
     return response;
@@ -115,18 +117,17 @@ class KossHandler {
 
   async getOwnerKossHandler(request, h) {
     const { id: credentialId } = request.auth.credentials;
-    const { ownerKoss, isCache } = await this._kossService.getOwnerKoss({ owner: credentialId });
+    const { ownerKoss } = await this._kossService.getOwnerKoss({ owner: credentialId });
+    // const { ownerKoss, isCache } = await this._kossService.getOwnerKoss({ owner: credentialId });
 
     const response = h.response({
       status: 'success',
-      data: {
-        ownerKoss,
-      },
+      data: ownerKoss,
     });
 
-    if (isCache) {
-      response.header('X-Data-Source', 'cache');
-    }
+    // if (isCache) {
+    //   response.header('X-Data-Source', 'cache');
+    // }
 
     response.code(200);
     return response;

@@ -6,10 +6,10 @@ const AuthenticationError = require('../exceptions/AuthenticationError');
 const { mapDBToModel } = require('../utils');
 
 class RoomService {
-  constructor(cacheService, storageService) {
+  constructor(storageService) {
     this._pool = new Pool();
     this._storageService = storageService;
-    this._cacheService = cacheService;
+    // this._cacheService = cacheService;
   }
 
   async addRoom({
@@ -41,8 +41,8 @@ class RoomService {
         }));
       }
       await client.query('COMMIT');
-      await this._cacheService.delete(`roomId:${roomId}`);
-      await this._cacheService.delete(`roomsKosId:${kosId}`);
+      // await this._cacheService.delete(`roomId:${roomId}`);
+      // await this._cacheService.delete(`roomsKosId:${kosId}`);
       return roomId;
     } catch (error) {
       await client.query('ROLLBACK');
@@ -72,8 +72,8 @@ class RoomService {
       const { rows } = await client.query(query);
       const kosId = rows[0].kos_id;
 
-      await this._cacheService.delete(`roomId:${id}`);
-      await this._cacheService.delete(`roomsKosId:${kosId}`);
+      // await this._cacheService.delete(`roomId:${id}`);
+      // await this._cacheService.delete(`roomsKosId:${kosId}`);
 
       return imgsId;
     } catch (error) {
@@ -103,112 +103,114 @@ class RoomService {
   }
 
   async getRoomsByKosId(kosId) {
-    try {
-      // throw new InvariantError('eaaa');
-      const rooms = await this._cacheService.get(`roomsKosId:${kosId}`);
-      return {
-        rooms,
-        isCache: 1,
-      };
-    } catch (error) {
-      const query = {
-        text: `SELECT r.id, r.kos_id, r.type, r.max_people, r.price, r.quantity, r.description, 
-        i.id as image_id, i.image 
-        FROM rooms as r 
-        LEFT JOIN image_rooms as i 
-        ON r.id = i.room_id 
-        WHERE r.kos_id = $1`,
-        values: [kosId],
-      };
+    const query = {
+      text: `SELECT r.id, r.kos_id, r.type, r.max_people, r.price, r.quantity, r.description, 
+      i.id as image_id, i.image 
+      FROM rooms as r 
+      LEFT JOIN image_rooms as i 
+      ON r.id = i.room_id 
+      WHERE r.kos_id = $1`,
+      values: [kosId],
+    };
 
-      const { rows } = await this._pool.query(query);
+    const { rows } = await this._pool.query(query);
 
-      if (!rows.length) {
-        throw new NotFoundError('Rooms tidak ditemukan.');
-      }
+    if (!rows.length) {
+      throw new NotFoundError('Rooms tidak ditemukan.');
+    }
 
-      const groupedData = rows.reduce((result, item) => {
-        const existingItem = result.find((groupedItem) => groupedItem.id === item.id);
+    const groupedData = rows.reduce((result, item) => {
+      const existingItem = result.find((groupedItem) => groupedItem.id === item.id);
 
-        if (existingItem) {
-          existingItem.image.push({
+      if (existingItem) {
+        existingItem.image.push({
+          image_id: item.image_id,
+          image: item.image,
+        });
+      } else {
+        result.push({
+          id: item.id,
+          kos_id: item.kos_id,
+          type: item.type,
+          max_people: item.max_people,
+          price: item.price,
+          quantity: item.quantity,
+          description: item.description,
+          image: [{
             image_id: item.image_id,
             image: item.image,
-          });
-        } else {
-          result.push({
-            id: item.id,
-            kos_id: item.kos_id,
-            type: item.type,
-            max_people: item.max_people,
-            price: item.price,
-            quantity: item.quantity,
-            description: item.description,
-            image: [{
-              image_id: item.image_id,
-              image: item.image,
-            }],
-          });
-        }
+          }],
+        });
+      }
 
-        return result;
-      }, []);
+      return result;
+    }, []);
 
-      const roomData = groupedData.map(mapDBToModel);
-      await this._cacheService.set(`roomsKosId:${kosId}`, JSON.stringify(roomData));
-      return { rooms: roomData };
-    }
+    const roomData = groupedData.map(mapDBToModel);
+    // await this._cacheService.set(`roomsKosId:${kosId}`, JSON.stringify(roomData));
+    return { rooms: roomData };
+    // try {
+    //   // throw new InvariantError('eaaa');
+    //   const rooms = await this._cacheService.get(`roomsKosId:${kosId}`);
+    //   return {
+    //     rooms,
+    //     isCache: 1,
+    //   };
+    // } catch (error) {
+      
+    // }
   }
 
   async getRoomById(id) {
-    try {
-      const room = await this._cacheService.get(`roomId:${id}`);
-      return {
-        room,
-        isCache: 1,
-      };
-    } catch (error) {
-      const queryRoom = {
-        text: `SELECT r.id, r.kos_id, r.type, r.max_people, r.quantity, r.price, r.description, k.name
-        FROM rooms as r
-        LEFT JOIN koss as k
-        ON r.kos_id = k.id
-        WHERE r.id = $1`,
-        values: [id],
-      };
+    const queryRoom = {
+      text: `SELECT r.id, r.kos_id, r.type, r.max_people, r.quantity, r.price, r.description, k.name
+      FROM rooms as r
+      LEFT JOIN koss as k
+      ON r.kos_id = k.id
+      WHERE r.id = $1`,
+      values: [id],
+    };
 
-      const resultRoom = await this._pool.query(queryRoom);
+    const resultRoom = await this._pool.query(queryRoom);
 
-      if (!resultRoom.rows.length) {
-        throw new NotFoundError('Room tidak ditemukan.');
-      }
-
-      const queryImageroom = {
-        text: 'SELECT id as image_id, image FROM image_rooms WHERE room_id = $1',
-        values: [id],
-      };
-
-      const resultImageRoom = await this._pool.query(queryImageroom);
-
-      const queryOccupantsRooms = {
-        text: `SELECT b.start, b.end, b.status, u.id as user_id, u.fullname, u.gender, u.phone_number
-        FROM bookings as b
-        LEFT JOIN users as u
-        ON b.user_id = u.id
-        WHERE b.room_id = $1 AND b.status = $2`,
-        values: [id, 'paid'],
-      };
-
-      const resultOccupants = await this._pool.query(queryOccupantsRooms);
-      console.log('resultOccupants.rows', resultOccupants.rows);
-
-      const roomData = resultRoom.rows[0];
-      roomData.image = resultImageRoom.rows;
-      roomData.occupants = resultOccupants.rows;
-
-      await this._cacheService.set(`roomId:${id}`, JSON.stringify(roomData));
-      return { room: roomData };
+    if (!resultRoom.rows.length) {
+      throw new NotFoundError('Room tidak ditemukan.');
     }
+
+    const queryImageroom = {
+      text: 'SELECT id as image_id, image FROM image_rooms WHERE room_id = $1',
+      values: [id],
+    };
+
+    const resultImageRoom = await this._pool.query(queryImageroom);
+
+    const queryOccupantsRooms = {
+      text: `SELECT b.start, b.end, b.status, u.id as user_id, u.fullname, u.gender, u.phone_number
+      FROM bookings as b
+      LEFT JOIN users as u
+      ON b.user_id = u.id
+      WHERE b.room_id = $1 AND b.status = $2`,
+      values: [id, 'paid'],
+    };
+
+    const resultOccupants = await this._pool.query(queryOccupantsRooms);
+    console.log('resultOccupants.rows', resultOccupants.rows);
+
+    const roomData = resultRoom.rows[0];
+    roomData.image = resultImageRoom.rows;
+    roomData.occupants = resultOccupants.rows;
+
+    // await this._cacheService.set(`roomId:${id}`, JSON.stringify(roomData));
+    return { room: roomData };
+    // try {
+    //   const room = await this._cacheService.get(`roomId:${id}`);
+    //   return {
+    //     room,
+    //     isCache: 1,
+    //   };
+    // } catch (error) {
+      
+    // }
   }
 
   async editRoomById(id, {
@@ -230,8 +232,8 @@ class RoomService {
 
     const kosId = rows[0].kos_id;
 
-    await this._cacheService.delete(`roomId:${id}`);
-    await this._cacheService.delete(`roomsKosId:${kosId}`);
+    // await this._cacheService.delete(`roomId:${id}`);
+    // await this._cacheService.delete(`roomsKosId:${kosId}`);
   }
 
   async delImageRoomById(roomId, imageId) {
@@ -261,8 +263,8 @@ class RoomService {
     const resultKosId = await this._pool.query(kosIdQuery);
     const kosId = resultKosId.rows[0].kos_id;
 
-    await this._cacheService.delete(`roomId:${roomId}`);
-    await this._cacheService.delete(`roomsKosId:${kosId}`);
+    // await this._cacheService.delete(`roomId:${roomId}`);
+    // await this._cacheService.delete(`roomsKosId:${kosId}`);
   }
 
   async getPriceByRoomId(id, duration) {

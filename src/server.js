@@ -47,7 +47,7 @@ const ReviewsService = require('./services/ReviewsService');
 const ReviewsValidator = require('./validator/reviews');
 
 // Cache
-const CacheService = require('./services/CacheService');
+// const CacheService = require('./services/CacheService');
 
 require('dotenv').config();
 
@@ -68,12 +68,14 @@ require('dotenv').config();
 // };
 
 const init = async () => {
-  const cacheService = new CacheService();
+  // const cacheService = new CacheService();
   const usersService = new UsersService();
   const ownersService = new OwnersService();
   const storageService = new StorageService(path.resolve(__dirname, 'api/file'));
-  const kossService = new KossService(cacheService, storageService);
-  const roomsService = new RoomsService(cacheService, storageService);
+  const kossService = new KossService(storageService);
+  const roomsService = new RoomsService(storageService);
+  // const kossService = new KossService(cacheService, storageService);
+  // const roomsService = new RoomsService(cacheService, storageService);
   const authService = new AuthenticationService();
   const bookingsService = new BookingService();
   const reviewsService = new ReviewsService();

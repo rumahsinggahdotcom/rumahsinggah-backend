@@ -15,7 +15,14 @@ class AuthenticationHandlers {
     const { username, password } = request.payload;
 
     await this._validator.validatePostAuthPayload({ username, password });
-    const id = await this._ownersService.verifyOwnersCredentials({ username, password });
+    const {
+      id,
+      fullname,
+      role,
+    } = await this._ownersService.verifyOwnersCredentials({
+      username,
+      password,
+    });
 
     const accessToken = await this._tokenManager.generateAccessToken({ id });
     const refreshToken = await this._tokenManager.generateRefreshToken({ id });
@@ -25,6 +32,11 @@ class AuthenticationHandlers {
     const response = h.response({
       status: 'success',
       data: {
+        user: {
+          id,
+          fullname,
+          role,
+        },
         accessToken,
         refreshToken,
       },
@@ -58,6 +70,8 @@ class AuthenticationHandlers {
 
   async deleteOwnersAuthHandler(request, h) {
     const { refreshToken } = request.payload;
+    console.log('request.payload', request.payload);
+    console.log('refreshToken', refreshToken);
     await this._validator.validateDeleteAuthPayload(refreshToken);
 
     await this._authsService.verifyRefreshToken(refreshToken);
@@ -119,6 +133,8 @@ class AuthenticationHandlers {
 
   async deleteUsersAuthHandler(request, h) {
     const { refreshToken } = request.payload;
+    console.log('request.payload', request.payload);
+    console.log('refreshToken', refreshToken);
 
     await this._validator.validateDeleteAuthPayload(refreshToken);
 
