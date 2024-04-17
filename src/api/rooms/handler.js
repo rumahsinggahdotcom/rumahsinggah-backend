@@ -84,7 +84,8 @@ class RoomsHandler {
 
   async getRoomsByKosIdHandler(request, h) {
     const { kosId } = request.params;
-    const { rooms, isCache } = await this._roomsService.getRoomsByKosId(kosId);
+    const { rooms } = await this._roomsService.getRoomsByKosId(kosId);
+    // const { rooms, isCache } = await this._roomsService.getRoomsByKosId(kosId);
 
     const response = h.response({
       status: 'success',
@@ -93,9 +94,9 @@ class RoomsHandler {
       },
     });
 
-    if (isCache) {
-      response.header('X-Data-Source', 'cache');
-    }
+    // if (isCache) {
+    //   response.header('X-Data-Source', 'cache');
+    // }
 
     response.code(200);
     return response;
@@ -103,16 +104,17 @@ class RoomsHandler {
 
   async getRoomByIdHandler(request, h) {
     const { roomId } = request.params;
-    const { room, isCache } = await this._roomsService.getRoomById(roomId);
+    const { room } = await this._roomsService.getRoomById(roomId);
+    // const { room, isCache } = await this._roomsService.getRoomById(roomId);
 
     const response = h.response({
       status: 'success',
       data: room,
     });
 
-    if (isCache) {
-      response.header('X-Data-Source', 'cache');
-    }
+    // if (isCache) {
+    //   response.header('X-Data-Source', 'cache');
+    // }
 
     response.code(200);
     return response;
