@@ -86,7 +86,14 @@ class RoomService {
 
   async storeImgRoomsToStorageDb(roomId, image, { client = this._pool } = {}) {
     const imageFilename = +new Date() + image.hapi.filename;
-    const pathImageFile = `http://${process.env.HOST}:${process.env.PORT}/file/rooms/${imageFilename}`;
+
+    let pathImageFile;
+    if (process.env.NODE_ENV == "production"){
+      pathImageFile = `https://${process.env.HOST}:${process.env.PORT}/file/koss/${imageFilename}`;
+    } else {
+      pathImageFile = `http://${process.env.HOST}:${process.env.PORT}/file/koss/${imageFilename}`;
+    }
+    
     const id = `image_room-${nanoid(16)}`;
 
     const imgRoomQuery = {
