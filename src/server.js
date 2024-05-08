@@ -45,6 +45,7 @@ const TokenManager = require('./tokenize/TokenManager');
 const reviewApp = require('./api/reviews');
 const ReviewsService = require('./services/ReviewsService');
 const ReviewsValidator = require('./validator/reviews');
+const { env } = require('process');
 
 // Cache
 // const CacheService = require('./services/CacheService');
@@ -82,7 +83,7 @@ const init = async () => {
   // const mongoose = new Mongoose();
 
   const server = hapi.server({
-    port: process.env.PORT || 3000,
+    port: process.env.PORT,
     host: process.env.NODE_ENV !== 'production' ? 'localhost' : '0.0.0.0',
     routes: {
       cors: {
@@ -228,6 +229,7 @@ const init = async () => {
 
   await server.start();
   console.log('TEST');
+  console.log(process.env.PORT)
 };
 
 init();
