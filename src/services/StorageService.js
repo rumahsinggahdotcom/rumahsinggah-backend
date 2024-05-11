@@ -2,12 +2,21 @@ const fs = require('fs');
 
 class StorageService {
   constructor(folder) {
+  // constructor(folder, supabase) {
     this._folder = folder;
+    // this._supabase = supabase;
 
     if (!fs.existsSync(folder)) {
       fs.mkdirSync(folder, { recursive: true });
     }
   }
+
+  // async saveToSupabase(image, filename){
+  //   console.log("oieeeee");
+  //   const {data, error} = await this._supabase.storage.from('rumahsinggahdotcom').upload(`koss/${filename}`, image)
+  //   console.log("bangeeeeekeee")
+  //   console.log(data, error)
+  // }
 
   writeFile(file, filename, section) {
     // const filename = +new Date() + image.filename;
