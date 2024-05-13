@@ -79,9 +79,9 @@ class KossService {
     
     let pathImageFile
     if (process.env.NODE_ENV == "production"){
-      pathImageFile = `https://${process.env.HOST}:${process.env.PORT}/file/koss/${imageFilename}`;
+      pathImageFile = `https://${process.env.HOST}/file/koss/${imageFilename}`;
     } else {
-      pathImageFile = `http://${process.env.HOST}:${process.env.PORT}/file/koss/${imageFilename}`;
+      pathImageFile = `http://${process.env.HOST}/file/koss/${imageFilename}`;
     }
 
     const id = `img_kos-${nanoid(16)}`;
