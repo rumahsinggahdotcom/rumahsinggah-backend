@@ -87,12 +87,16 @@ class RoomService {
   async storeImgRoomsToStorageDb(roomId, image, { client = this._pool } = {}) {
     const imageFilename = +new Date() + image.hapi.filename;
 
-    let pathImageFile;
-    if (process.env.NODE_ENV == "production"){
-      pathImageFile = `https://${process.env.HOST}/file/koss/${imageFilename}`;
-    } else {
-      pathImageFile = `http://${process.env.HOST}/file/koss/${imageFilename}`;
-    }
+    await this._storageService.writeFile(image, imageFilename, 'rooms');
+    await this._storageService.saveToSupabase(image, imageFilename)
+    const pathImageFile = await this._storageService.getPublicUrl(imageFilename, 'rooms')
+
+    // let pathImageFile;
+    // if (process.env.NODE_ENV == "production"){
+    //   pathImageFile = `https://${process.env.HOST}/file/koss/${imageFilename}`;
+    // } else {
+    //   pathImageFile = `http://${process.env.HOST}/file/koss/${imageFilename}`;
+    // }
 
     const id = `image_room-${nanoid(16)}`;
 
@@ -105,7 +109,6 @@ class RoomService {
       throw new InvariantError('Gagal menambahkan image room');
     }
 
-    await this._storageService.writeFile(image, imageFilename, 'rooms');
     return rows[0].id;
   }
 
