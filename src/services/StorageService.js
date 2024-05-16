@@ -1,25 +1,29 @@
 const fs = require('fs');
 
 class StorageService {
-  constructor(folder) {
-  // constructor(folder, supabase) {
+  constructor(folder, supabase) {
     this._folder = folder;
-    // this._supabase = supabase;
+    this._supabase = supabase;
 
     if (!fs.existsSync(folder)) {
       fs.mkdirSync(folder, { recursive: true });
     }
   }
 
-  // async saveToSupabase(image, filename){
-  //   console.log("oieeeee");
-  //   const {data, error} = await this._supabase.storage.from('rumahsinggahdotcom').upload(`koss/${filename}`, image)
-  //   console.log("bangeeeeekeee")
-  //   console.log(data, error)
-  // }
+  async saveToSupabase(image, filename) {
+    await this._supabase.storage.from('rumahsinggahdotcom')
+      .upload(`koss/${filename}`, image._data, {
+        contentType: "image/jpeg"
+      })
+  }
+
+  async getPublicUrl(filename, folder){
+    const { data } = this._supabase.storage.from('rumahsinggahdotcom').getPublicUrl(`${folder}/${filename}`)
+    console.log("data", data);
+    return data.publicUrl
+  }
 
   writeFile(file, filename, section) {
-    // const filename = +new Date() + image.filename;
     const path = `${this._folder}/${section}/${filename}`;
 
     const fileStream = fs.createWriteStream(path);
