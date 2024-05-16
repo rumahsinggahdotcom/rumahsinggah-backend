@@ -2,6 +2,7 @@ const hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
 const Inert = require('@hapi/inert');
 const path = require('path');
+const { createClient } = require("@supabase/supabase-js")
 // const Mongoose = require('mongoose');
 // const { MongoClient } = require('mongodb');
 // const mongodb = require('hapi-mongodb');
@@ -69,14 +70,13 @@ require('dotenv').config();
 // };
 
 const init = async () => {
+  const supabase = createClient("https://pmlsxgdhzjqggpttgtmc.supabase.co", process.env.SERVICE_KEY)
   // const cacheService = new CacheService();
   const usersService = new UsersService();
   const ownersService = new OwnersService();
-  const storageService = new StorageService(path.resolve(__dirname, 'api/file'));
+  const storageService = new StorageService(path.resolve(__dirname, 'api/file'), supabase);
   const kossService = new KossService(storageService);
   const roomsService = new RoomsService(storageService);
-  // const kossService = new KossService(cacheService, storageService);
-  // const roomsService = new RoomsService(cacheService, storageService);
   const authService = new AuthenticationService();
   const bookingsService = new BookingService();
   const reviewsService = new ReviewsService();
