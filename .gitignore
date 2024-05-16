@@ -1,7 +1,5 @@
 node_modules
 package-lock.json
 .env
-src/api/koss/file
-src/api/room/file
-# src/api/file/koss
-# src/api/file/rooms
+src/api/file/koss
+src/api/file/rooms
