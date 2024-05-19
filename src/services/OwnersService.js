@@ -131,11 +131,11 @@ class OwnersService {
       text: 'SELECT id, password, fullname FROM owners WHERE username = $1',
       values: [username],
     };
-    const result = await this._pool.query(query);
-    if (!result.rows.length) {
+    const { rows } = await this._pool.query(query);
+    if (!rows.length) {
       throw new AuthenticationError('Username atau password yang anda berikan salah.');
     }
-    const { id, password: hashedPassword, fullname } = result.rows[0];
+    const { id, password: hashedPassword, fullname } = rows[0];
     const match = await bcrypt.compare(password, hashedPassword);
 
     if (!match) {
