@@ -77,16 +77,16 @@ class KossService {
   async storeImgKossToStorageDb(kosId, image, { client = this._pool } = {}) {
     const imageFilename = +new Date() + image.hapi.filename;
 
-    await this._storageService.writeFile(image, imageFilename, 'koss');
-    await this._storageService.saveToSupabase(image, imageFilename)
-    const pathImageFile = await this._storageService.getPublicUrl(imageFilename, 'koss')
-    // let pathImageFile
-    // if (process.env.NODE_ENV == "production"){
-    //   // pathImageFile = `https://${process.env.HOST}/file/koss/${imageFilename}`;
-    //   pathImageFile = publicUrl;
-    // } else {
-    //   pathImageFile = `http://${process.env.HOST}/file/koss/${imageFilename}`;
-    // }
+    let pathImageFile
+    if (process.env.NODE_ENV == "production"){
+      await this._storageService.saveToSupabase(image, imageFilename)
+      pathImageFile = await this._storageService.getPublicUrl(imageFilename, 'koss')
+      // pathImageFile = `https://${process.env.HOST}/file/koss/${imageFilename}`;
+      // pathImageFile = publicUrl;
+    } else {
+      await this._storageService.writeFile(image, imageFilename, 'koss');
+      pathImageFile = `http://${process.env.HOST}:${process.env.PORT}/file/koss/${imageFilename}`;
+    }
 
     const id = `img_kos-${nanoid(16)}`;
     const imgKosQuery = {

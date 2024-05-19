@@ -87,16 +87,15 @@ class RoomService {
   async storeImgRoomsToStorageDb(roomId, image, { client = this._pool } = {}) {
     const imageFilename = +new Date() + image.hapi.filename;
 
-    await this._storageService.writeFile(image, imageFilename, 'rooms');
-    await this._storageService.saveToSupabase(image, imageFilename)
-    const pathImageFile = await this._storageService.getPublicUrl(imageFilename, 'rooms')
-
     // let pathImageFile;
-    // if (process.env.NODE_ENV == "production"){
-    //   pathImageFile = `https://${process.env.HOST}/file/koss/${imageFilename}`;
-    // } else {
-    //   pathImageFile = `http://${process.env.HOST}/file/koss/${imageFilename}`;
-    // }
+    if (process.env.NODE_ENV == "production"){
+      await this._storageService.saveToSupabase(image, imageFilename)
+      pathImageFile = await this._storageService.getPublicUrl(imageFilename, 'rooms')
+      // pathImageFile = `https://${process.env.HOST}/file/koss/${imageFilename}`;
+    } else {
+      await this._storageService.writeFile(image, imageFilename, 'rooms');
+      pathImageFile = `http://${process.env.HOST}:${process.env.PORT}/file/rooms/${imageFilename}`;
+    }
 
     const id = `image_room-${nanoid(16)}`;
 
