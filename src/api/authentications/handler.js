@@ -11,18 +11,25 @@ class AuthenticationHandlers {
     autoBind(this);
   }
 
-  async postOwnersAuthHandler(request, h) {
+  async postAuthHandler(request, h) {
     const { username, password } = request.payload;
 
     await this._validator.validatePostAuthPayload({ username, password });
-    const {
-      id,
-      fullname,
-      role,
-    } = await this._ownersService.verifyOwnersCredentials({
+    let userData
+
+    userData = await this._usersService.verifyUsersCredentials({
       username,
       password,
     });
+
+    // console.log("userData from handler", userData);
+    if (!userData) {
+      userData = await this._ownersService.verifyOwnersCredentials({
+        username, password
+      })
+    }
+
+    const { id, fullname, role } = userData;
 
     const accessToken = await this._tokenManager.generateAccessToken({ id });
     const refreshToken = await this._tokenManager.generateRefreshToken({ id });
@@ -45,13 +52,13 @@ class AuthenticationHandlers {
     return response;
   }
 
-  async putOwnersAuthHandler(request, h) {
+  async putAuthHandler(request, h) {
     const { refreshToken } = request.payload;
     await this._validator.validatePutAuthPayload(refreshToken);
 
     await this._authsService.verifyRefreshToken(refreshToken);
-    const { id } = await this._tokenManager.verifyRefreshToken(refreshToken);
 
+    const { id } = await this._tokenManager.verifyRefreshToken(refreshToken);
     const accessToken = await this._tokenManager.generateAccessToken({ id });
 
     const response = h.response({
@@ -66,7 +73,7 @@ class AuthenticationHandlers {
     return response;
   }
 
-  async deleteOwnersAuthHandler(request, h) {
+  async deleteAuthHandler(request, h) {
     const { refreshToken } = request.payload;
     console.log('request.payload', request.payload);
     console.log('refreshToken', refreshToken);
@@ -82,69 +89,6 @@ class AuthenticationHandlers {
 
     response.code(200);
 
-    return response;
-  }
-
-  async postUsersAuthHandler(request, h) {
-    const { username, password } = request.payload;
-
-    await this._validator.validatePostAuthPayload({ username, password });
-
-    const id = await this._usersService.verifyUsersCredentials({ username, password });
-
-    const refreshToken = await this._tokenManager.generateRefreshToken({ id });
-    const accessToken = await this._tokenManager.generateAccessToken({ id });
-
-    await this._authsService.addRefreshToken(refreshToken);
-
-    const response = h.response({
-      status: 'success',
-      data: {
-        accessToken,
-        refreshToken,
-      },
-    });
-
-    response.code(201);
-    return response;
-  }
-
-  async putUsersAuthHandler(request, h) {
-    const { refreshToken } = request.payload;
-    await this._validator.validatePutAuthPayload({ refreshToken });
-
-    await this._authsService.verifyRefreshToken(refreshToken);
-
-    const { id } = await this._tokenManager.verifyRefreshToken(refreshToken);
-    const accessToken = await this._tokenManager.generateAccessToken({ id });
-
-    const response = h.response({
-      status: 'success',
-      data: {
-        accessToken,
-      },
-    });
-
-    response.code(200);
-    return response;
-  }
-
-  async deleteUsersAuthHandler(request, h) {
-    const { refreshToken } = request.payload;
-    console.log('request.payload', request.payload);
-    console.log('refreshToken', refreshToken);
-
-    await this._validator.validateDeleteAuthPayload(refreshToken);
-
-    await this._authsService.verifyRefreshToken(refreshToken);
-    await this._authsService.deleteRefreshToken(refreshToken);
-
-    const response = h.response({
-      status: 'success',
-      message: 'Refresh token berhasil dihapus.',
-    });
-
-    response.code(200);
     return response;
   }
 }
