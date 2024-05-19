@@ -152,24 +152,24 @@ class UsersService {
 
   async verifyUsersCredentials({ username, password }) {
     const query = {
-      text: 'SELECT id, password FROM users WHERE username = $1',
+      text: 'SELECT id, password, fullname FROM users WHERE username = $1',
       values: [username],
     };
 
     const { rows } = await this._pool.query(query);
     if (!rows.length) {
-      throw new AuthenticationError('Kredensial yang anda berikan salah.');
+      // throw new AuthenticationError('Kredensial yang anda berikan salah.');
+      return null
     }
 
-    const { id, password: hashedPassword } = rows[0];
-
+    const { id, password: hashedPassword, fullname } = rows[0];
     const match = bcrypt.compare(password, hashedPassword);
 
     if (!match) {
       throw new AuthenticationError('Kredensial yang anda berikan salah');
     }
 
-    return id;
+    return { id, fullname, role: 'user'};
   }
 
   async verifyUsersOnly(id) {
