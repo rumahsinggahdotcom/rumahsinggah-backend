@@ -32,11 +32,9 @@ class AuthenticationHandlers {
     const response = h.response({
       status: 'success',
       data: {
-        user: {
-          id,
-          fullname,
-          role,
-        },
+        id,
+        fullname,
+        role,
         accessToken,
         refreshToken,
       },
