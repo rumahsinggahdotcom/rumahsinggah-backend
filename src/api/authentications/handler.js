@@ -32,8 +32,12 @@ class AuthenticationHandlers {
     const { id, fullname, role } = userData;
 
     const accessToken = await this._tokenManager.generateAccessToken({ id });
+    const { accessTokenExp, accessTokenIat } = await this._tokenManager.getAccessTokenIat(accessToken);
     const refreshToken = await this._tokenManager.generateRefreshToken({ id });
 
+    console.log(typeof (accessTokenExp));
+    console.log("accessTokenExp", accessTokenExp);
+    console.log("accessTokenIat", accessTokenIat);
     await this._authsService.addRefreshToken(refreshToken);
 
     const response = h.response({
@@ -43,6 +47,7 @@ class AuthenticationHandlers {
         fullname,
         role,
         accessToken,
+        accessTokenExp,
         refreshToken,
       },
     });
@@ -60,11 +65,15 @@ class AuthenticationHandlers {
 
     const { id } = await this._tokenManager.verifyRefreshToken(refreshToken);
     const accessToken = await this._tokenManager.generateAccessToken({ id });
+    const { accessTokenExp, accessTokenIat } = await this._tokenManager.getAccessTokenExp(accessToken);
+    console.log("accessTokenExp", accessTokenExp);
+    console.log("accessTokenIat", accessTokenIat);
 
     const response = h.response({
       status: 'success',
       data: {
         accessToken,
+        accessTokenExp
       },
     });
 
