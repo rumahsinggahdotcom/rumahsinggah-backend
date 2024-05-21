@@ -32,7 +32,7 @@ class AuthenticationHandlers {
     const { id, fullname, role } = userData;
 
     const accessToken = await this._tokenManager.generateAccessToken({ id });
-    const { accessTokenExp, accessTokenIat } = await this._tokenManager.getAccessTokenIat(accessToken);
+    const { accessTokenExp, accessTokenIat } = await this._tokenManager.getAccessTokenExp(accessToken);
     const refreshToken = await this._tokenManager.generateRefreshToken({ id });
 
     console.log(typeof (accessTokenExp));
