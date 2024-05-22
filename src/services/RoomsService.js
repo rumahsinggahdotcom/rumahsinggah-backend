@@ -87,7 +87,7 @@ class RoomService {
   async storeImgRoomsToStorageDb(roomId, image, { client = this._pool } = {}) {
     const imageFilename = +new Date() + image.hapi.filename;
 
-    // let pathImageFile;
+    let pathImageFile;
     if (process.env.NODE_ENV == "production"){
       await this._storageService.saveToSupabase(image, imageFilename)
       pathImageFile = await this._storageService.getPublicUrl(imageFilename, 'rooms')
