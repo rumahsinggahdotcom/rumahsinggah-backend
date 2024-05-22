@@ -17,12 +17,19 @@ class RoomsHandler {
     const {
       kosId,
       type,
-      maxPeople,
-      price,
-      quantity,
       description,
     } = request.payload;
 
+    let {
+      maxPeople,
+      price,
+      quantity
+    } = request.payload;
+    
+    maxPeople = parseInt(maxPeople)
+    price = parseInt(price)
+    quantity = parseInt(quantity)
+    
     const { id: credentialId } = request.auth.credentials;
 
     await this._kossService.verifyKosAccess(kosId, credentialId);
