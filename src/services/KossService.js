@@ -78,7 +78,7 @@ class KossService {
     const imageFilename = +new Date() + image.hapi.filename;
 
     let pathImageFile
-    if (process.env.NODE_ENV == "production"){
+    if (process.env.NODE_ENV == "production") {
       await this._storageService.saveToSupabase(image, imageFilename)
       pathImageFile = await this._storageService.getPublicUrl(imageFilename, 'koss')
       // pathImageFile = `https://${process.env.HOST}/file/koss/${imageFilename}`;
@@ -233,7 +233,7 @@ class KossService {
     //     isCache: 1,
     //   };
     // } catch (error) {
-      
+
     // }
   }
 
@@ -256,10 +256,10 @@ class KossService {
     // await this._cacheService.delete(`ownerkoss:${rows[0].owner_id}`);
   }
 
-  async delImageKosById(kosId, imageId) {
+  async delImageKosById(imageId) {
     const query = {
-      text: 'DELETE FROM image_koss WHERE kos_id = $1 AND id = $2 RETURNING id, image',
-      values: [kosId, imageId],
+      text: 'DELETE FROM image_koss WHERE id = $1 RETURNING id, image',
+      values: [imageId],
     };
 
     const { rows } = await this._pool.query(query);
@@ -320,13 +320,35 @@ class KossService {
     //     isCache: 1,
     //   };
     // } catch (error) {
-      
+
     // }
   }
 
   async verifyKosAccess(id, credentialId) {
     const query = {
       text: 'SELECT id, owner_id FROM koss WHERE id = $1',
+      values: [id],
+    };
+
+    const { rows } = await this._pool.query(query);
+    if (!rows.length) {
+      throw new NotFoundError('Kos tidak ditemukan');
+    }
+
+    const kos = rows[0];
+
+    if (kos.owner_id !== credentialId) {
+      throw new AuthenticationError('Anda tidak berhak mengakses resource ini.');
+    }
+  }
+
+  async verifyImageKosAccess(id, credentialId) {
+    const query = {
+      text: `SELECT i.id as image_id, k.owner_id 
+      FROM koss as k
+      INNER JOIN image_koss as i
+      ON k.id = i.kos_id 
+      WHERE i.id = $1`,
       values: [id],
     };
 
