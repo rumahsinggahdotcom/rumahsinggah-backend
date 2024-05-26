@@ -154,10 +154,10 @@ class KossHandler {
   }
 
   async delImageKosByIdHandler(request, h) {
-    const { imageId } = request.params;
+    const { kosId, imageId } = request.params;
     const { id: credentialId } = request.auth.credentials;
 
-    await this._kossService.verifyImageKosAccess(imageId, credentialId)
+    await this._kossService.verifyKosAccess(kosId, credentialId)
     await this._kossService.delImageKosById(imageId);
 
     const response = h.response({

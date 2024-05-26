@@ -49,7 +49,7 @@ const kossRoutes = (handler) => [
   },
   {
     method: 'DELETE',
-    path: '/koss/images/{imageId}',
+    path: '/koss/{kosId}/images/{imageId}',
     handler: handler.delImageKosByIdHandler,
     options: {
       auth: 'kossapp_jwt',
