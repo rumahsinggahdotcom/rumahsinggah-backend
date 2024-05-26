@@ -63,11 +63,11 @@ class RoomsHandler {
   }
 
   async postRoomImagesHandler(request, h) {
-    const { id, images } = request.payload;
+    const { roomId, images } = request.payload;
     const { id: credentialId } = request.auth.credentials;
     const arrayImgs = assignImageToArray(images);
 
-    await this._roomsService.verifyRoomAccess(id, credentialId);
+    await this._roomsService.verifyRoomAccess(roomId, credentialId);
 
     if (arrayImgs.length === 0) throw new InvariantError('Image tidak ada');
 
@@ -75,7 +75,7 @@ class RoomsHandler {
       await this._validator.validateImageRoomPayload(image);
     }));
 
-    const imgsId = await this._roomsService.addImageRoom(id, arrayImgs);
+    const imgsId = await this._roomsService.addImageRoom(roomId, arrayImgs);
 
     const response = h.response({
       status: 'success',
@@ -162,6 +162,7 @@ class RoomsHandler {
       quantity,
       description,
     });
+    console.log("oi3");
 
     const response = h.response({
       status: 'success',
