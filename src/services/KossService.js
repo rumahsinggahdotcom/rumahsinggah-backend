@@ -145,7 +145,7 @@ class KossService {
 
   async getKosById(kosId) {
     const queryRoomsKos = {
-      text: `SELECT r.id AS room_id, r.type, r.price, i.id as image_room_id, i.image
+      text: `SELECT r.id AS room_id, r.type, r.price, i.id as image_id, i.image
       FROM rooms AS r
       LEFT JOIN image_rooms AS i
       ON r.id = i.room_id
@@ -160,7 +160,7 @@ class KossService {
       );
       if (existingRoom) {
         existingRoom.image.push({
-          image_room_id: item.image_room_id,
+          image_id: item.image_id,
           image: item.image,
         });
       } else {
@@ -169,7 +169,7 @@ class KossService {
           type: item.type,
           price: item.price,
           image: [{
-            image_room_id: item.image_room_id,
+            image_id: item.image_id,
             image: item.image,
           }],
         });
@@ -197,7 +197,7 @@ class KossService {
       roomMerged.push({
         ...rooms[i],
         occupants: resultQueryOccupants.rows.filter(
-          (occupant) => occupant.room_id === rooms[i].roomId,
+          (occupant) => occupant.room_id === rooms[i].id,
         ),
       });
     }
