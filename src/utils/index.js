@@ -20,7 +20,6 @@ const mapDBToModel = ({
   image,
   occupants,
   room_id,
-  image_room_id,
   start,
   end,
   total_price,
@@ -49,8 +48,7 @@ const mapDBToModel = ({
   quantity,
   image,
   occupants,
-  roomId: room_id,
-  imageRoomId: image_room_id,
+  id: room_id,
   start,
   end,
   totalPrice: total_price,
@@ -60,6 +58,8 @@ const mapDBToModel = ({
   snapToken: snap_token,
   snapRedirectUrl: snap_redirect_url,
 });
+
+
 
 /* assign images payload to array */
 const assignImageToArray = (images) => {
