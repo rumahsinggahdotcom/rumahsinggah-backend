@@ -172,7 +172,7 @@ class RoomService {
 
   async getRoomById(id) {
     const queryRoom = {
-      text: `SELECT r.id, r.kos_id, r.type, r.max_people, r.quantity, r.price, r.description, k.name
+      text: `SELECT r.id, r.kos_id, r.type, r.max_people, r.quantity, r.price, r.description, k.name, k.owner_id
       FROM rooms as r
       LEFT JOIN koss as k
       ON r.kos_id = k.id
