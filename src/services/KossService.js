@@ -137,10 +137,10 @@ class KossService {
       return result;
     }, []);
 
-    const koss = groupedData.map(mapDBToModel);
+    // const koss = groupedData.map(mapDBToModel);
     // await this._cacheService.set('koss', JSON.stringify(koss));
 
-    return { koss };
+    return { koss: groupedData };
   }
 
   async getKosById(kosId) {
