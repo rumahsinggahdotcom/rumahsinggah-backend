@@ -69,8 +69,7 @@ class RoomService {
         values: [id],
       };
 
-      const { rows } = await client.query(query);
-      const kosId = rows[0].kos_id;
+      await client.query(query);
 
       // await this._cacheService.delete(`roomId:${id}`);
       // await this._cacheService.delete(`roomsKosId:${kosId}`);
@@ -88,9 +87,9 @@ class RoomService {
     const imageFilename = +new Date() + image.hapi.filename;
 
     let pathImageFile;
-    if (process.env.NODE_ENV == "production"){
-      await this._storageService.saveToSupabase(image, imageFilename)
-      pathImageFile = await this._storageService.getPublicUrl(imageFilename, 'rooms')
+    if (process.env.NODE_ENV === 'production') {
+      await this._storageService.saveToSupabase(image, imageFilename);
+      pathImageFile = await this._storageService.getPublicUrl(imageFilename, 'rooms');
       // pathImageFile = `https://${process.env.HOST}/file/koss/${imageFilename}`;
     } else {
       await this._storageService.writeFile(image, imageFilename, 'rooms');
@@ -166,7 +165,6 @@ class RoomService {
     //     isCache: 1,
     //   };
     // } catch (error) {
-      
     // }
   }
 
@@ -218,7 +216,6 @@ class RoomService {
     //     isCache: 1,
     //   };
     // } catch (error) {
-      
     // }
   }
 
@@ -238,8 +235,6 @@ class RoomService {
     if (!rows.length) {
       throw new InvariantError('Gagal Memperbarui Room. Id Tidak Ditemukan.');
     }
-
-    const kosId = rows[0].kos_id;
 
     // await this._cacheService.delete(`roomId:${id}`);
     // await this._cacheService.delete(`roomsKosId:${kosId}`);
@@ -269,8 +264,7 @@ class RoomService {
       values: [roomId],
     };
 
-    const resultKosId = await this._pool.query(kosIdQuery);
-    const kosId = resultKosId.rows[0].kos_id;
+    await this._pool.query(kosIdQuery);
 
     // await this._cacheService.delete(`roomId:${roomId}`);
     // await this._cacheService.delete(`roomsKosId:${kosId}`);

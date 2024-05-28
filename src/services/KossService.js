@@ -50,7 +50,7 @@ class KossService {
     }
   }
 
-  async addImageKos(id, arrayImgs, ownerId) {
+  async addImageKos(id, arrayImgs) {
     const imgsId = [];
     const client = await this._pool.connect();
     try {
@@ -77,10 +77,10 @@ class KossService {
   async storeImgKossToStorageDb(kosId, image, { client = this._pool } = {}) {
     const imageFilename = +new Date() + image.hapi.filename;
 
-    let pathImageFile
-    if (process.env.NODE_ENV == "production") {
-      await this._storageService.saveToSupabase(image, imageFilename)
-      pathImageFile = await this._storageService.getPublicUrl(imageFilename, 'koss')
+    let pathImageFile;
+    if (process.env.NODE_ENV === 'production') {
+      await this._storageService.saveToSupabase(image, imageFilename);
+      pathImageFile = await this._storageService.getPublicUrl(imageFilename, 'koss');
       // pathImageFile = `https://${process.env.HOST}/file/koss/${imageFilename}`;
       // pathImageFile = publicUrl;
     } else {
@@ -208,7 +208,6 @@ class KossService {
       values: [kosId],
     };
     const resultImageKos = await this._pool.query(queryImageKos);
-
     const queryKos = {
       text: 'SELECT * FROM koss where id = $1',
       values: [kosId],
