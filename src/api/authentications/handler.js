@@ -15,7 +15,7 @@ class AuthenticationHandlers {
     const { username, password } = request.payload;
 
     await this._validator.validatePostAuthPayload({ username, password });
-    let userData
+    let userData;
 
     userData = await this._usersService.verifyUsersCredentials({
       username,
@@ -25,19 +25,22 @@ class AuthenticationHandlers {
     // console.log("userData from handler", userData);
     if (!userData) {
       userData = await this._ownersService.verifyOwnersCredentials({
-        username, password
-      })
+        username, password,
+      });
     }
 
     const { id, fullname, role } = userData;
 
     const accessToken = await this._tokenManager.generateAccessToken({ id });
-    const { accessTokenExp, accessTokenIat } = await this._tokenManager.getAccessTokenExp(accessToken);
+    const {
+      accessTokenExp,
+      accessTokenIat,
+    } = await this._tokenManager.getAccessTokenExp(accessToken);
     const refreshToken = await this._tokenManager.generateRefreshToken({ id });
 
     console.log(typeof (accessTokenExp));
-    console.log("accessTokenExp", accessTokenExp);
-    console.log("accessTokenIat", accessTokenIat);
+    console.log('accessTokenExp', accessTokenExp);
+    console.log('accessTokenIat', accessTokenIat);
     await this._authsService.addRefreshToken(refreshToken);
 
     const response = h.response({
@@ -65,15 +68,18 @@ class AuthenticationHandlers {
 
     const { id } = await this._tokenManager.verifyRefreshToken(refreshToken);
     const accessToken = await this._tokenManager.generateAccessToken({ id });
-    const { accessTokenExp, accessTokenIat } = await this._tokenManager.getAccessTokenExp(accessToken);
-    console.log("accessTokenExp", accessTokenExp);
-    console.log("accessTokenIat", accessTokenIat);
+    const {
+      accessTokenExp,
+      accessTokenIat,
+    } = await this._tokenManager.getAccessTokenExp(accessToken);
+    console.log('accessTokenExp', accessTokenExp);
+    console.log('accessTokenIat', accessTokenIat);
 
     const response = h.response({
       status: 'success',
       data: {
         accessToken,
-        accessTokenExp
+        accessTokenExp,
       },
     });
 
