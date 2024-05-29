@@ -1,7 +1,7 @@
 const routes = (handler) => [
   {
     method: 'POST',
-    path: '/koss/booking',
+    path: '/booking',
     handler: handler.postBookingHandler,
     options: {
       auth: 'kossapp_jwt',
@@ -9,15 +9,15 @@ const routes = (handler) => [
   },
   {
     method: 'GET',
-    path: '/koss/booking',
-    handler: handler.getBookingsByOwnerIdHandler,
+    path: '/booking',
+    handler: handler.getBookingsByRoleHandler,
     options: {
       auth: 'kossapp_jwt',
     },
   },
   {
     method: 'GET',
-    path: '/koss/booking/{id}',
+    path: '/booking/{id}',
     handler: handler.getBookingByIdHandler,
     options: {
       auth: 'kossapp_jwt',
@@ -25,8 +25,8 @@ const routes = (handler) => [
   },
   {
     method: 'PUT',
-    path: '/koss/booking/{id}',
-    handler: handler.acceptBookingByIdHandler,
+    path: '/booking/{id}',
+    handler: handler.confirmProcessBookingByIdHandler,
     options: {
       auth: 'kossapp_jwt',
     },
