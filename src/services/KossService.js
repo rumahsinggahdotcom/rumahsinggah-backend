@@ -197,7 +197,7 @@ class KossService {
       roomMerged.push({
         ...rooms[i],
         occupants: resultQueryOccupants.rows.filter(
-          (occupant) => occupant.room_id === rooms[i].id,
+          (occupant) => occupant.room_id === rooms[i].roomId,
         ),
       });
     }
