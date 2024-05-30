@@ -170,7 +170,8 @@ class RoomService {
 
   async getRoomById(id) {
     const queryRoom = {
-      text: `SELECT r.id, r.kos_id, r.type, r.max_people, r.quantity, r.price, r.description, k.name, k.owner_id
+      text: `SELECT r.id as room_id, r.kos_id, r.type, r.max_people, r.quantity, r.price, r.description, k.name, 
+      k.owner_id
       FROM rooms as r
       LEFT JOIN koss as k
       ON r.kos_id = k.id
@@ -203,7 +204,7 @@ class RoomService {
     const resultOccupants = await this._pool.query(queryOccupantsRooms);
     console.log('resultOccupants.rows', resultOccupants.rows);
 
-    const roomData = resultRoom.rows[0];
+    const roomData = resultRoom.rows.map(mapDBToModel)[0];
     roomData.image = resultImageRoom.rows;
     roomData.occupants = resultOccupants.rows;
 
@@ -283,12 +284,10 @@ class RoomService {
     }
 
     let priceRoom = rows[0].price;
-    if (duration) {
-      if (duration === 12 || duration === 6) {
-        priceRoom *= duration / 6;
-      } else {
-        throw new InvariantError('Durasi tidak tersedia');
-      }
+    if (duration === 12 || duration === 6) {
+      priceRoom *= duration / 12;
+    } else {
+      throw new InvariantError('Durasi tidak tersedia');
     }
 
     return priceRoom;
@@ -314,7 +313,7 @@ class RoomService {
     return { type, name };
   }
 
-  async editRoomQuantityById(id, quantity) {
+  async reduceRoomQuantityById(id, quantity) {
     const query = {
       text: 'UPDATE rooms SET quantity = quantity - $2 WHERE id = $1 RETURNING id',
       values: [id, quantity],
