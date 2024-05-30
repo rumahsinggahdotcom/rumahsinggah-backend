@@ -13,14 +13,13 @@ class StorageService {
   async saveToSupabase(image, filename) {
     await this._supabase.storage.from('rumahsinggahdotcom')
       .upload(`koss/${filename}`, image._data, {
-        contentType: "image/jpeg"
-      })
+        contentType: 'image/jpeg',
+      });
   }
 
-  async getPublicUrl(filename, folder){
-    const { data } = this._supabase.storage.from('rumahsinggahdotcom').getPublicUrl(`${folder}/${filename}`)
-    console.log("data", data);
-    return data.publicUrl
+  async getPublicUrl(filename, folder) {
+    const { data } = this._supabase.storage.from('rumahsinggahdotcom').getPublicUrl(`${folder}/${filename}`);
+    return data.publicUrl;
   }
 
   writeFile(file, filename, section) {
