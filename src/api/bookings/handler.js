@@ -20,9 +20,12 @@ class BookingsHandler {
       duration,
       status,
     } = request.payload;
+
+    console.log('roomId, ownerId, start, end, duration, status', roomId, ownerId, start, end, duration, status);
     const { id: credentialId } = request.auth.credentials;
 
     const totalPrice = await this._roomsService.getPriceByRoomId(roomId, duration);
+    console.log('totalPrice', totalPrice);
     await this._roomsService.verifyRoomsOwner(roomId, ownerId);
 
     await this._validator.validateBookingPayload({
@@ -46,7 +49,7 @@ class BookingsHandler {
 
     const response = h.response({
       status: 'success',
-      message: 'Berhasil melakukan booking',
+      message: 'Berhasil melakukan request booking',
       data: {
         id,
       },
@@ -57,9 +60,10 @@ class BookingsHandler {
     return response;
   }
 
-  async getBookingsByOwnerIdHandler(request, h) {
+  async getBookingsByRoleHandler(request, h) {
     const { id: credentialId } = request.auth.credentials;
-    const bookings = await this._bookingsService.getBookingsByOwnerId(credentialId);
+    const bookings = await this._bookingsService.getBookingsByRole(credentialId);
+    console.log('bookings', bookings);
 
     const response = h.response({
       status: 'success',
@@ -89,72 +93,84 @@ class BookingsHandler {
     return response;
   }
 
-  async acceptBookingByIdHandler(request, h) {
+  async confirmProcessBookingByIdHandler(request, h) {
     const { id } = request.params;
     const { id: credentialId } = request.auth.credentials;
     const {
-      // totalPrice,
-      // name,
-      // roomId,
-      // type,
-      // fullname,
-      // phoneNumber,
-      // address,
       status,
+      note,
     } = request.payload;
-    const {
-      roomId,
-      userId,
-      totalPrice,
-    } = await this._bookingsService.getBookingById(id);
-    console.log(roomId, userId, totalPrice);
 
+    let response;
     await this._bookingsService.verifyOwnerBookingAccess(id, credentialId);
 
-    const { type, name } = await this._roomsService.getRoomDetailMidtransById(roomId);
-    const {
-      fullname,
-      phoneNumber,
-      address,
-    // } = await this._usersService.getUserDetailMidtransById(userId);
-    } = await this._usersService.getUserById(userId);
-    console.log(fullname, phoneNumber, address);
+    if (status === 'unpaid') {
+      const {
+        roomId,
+        userId,
+        totalPrice,
+      } = await this._bookingsService.getBookingById(id);
+      console.log(roomId, userId, totalPrice);
 
-    const {
-      bookingId,
-      snapToken,
-      snapRedirectUrl,
-    } = await this._bookingsService.postMidtransTransaction({
-      id,
-      totalPrice,
-      name,
-      type,
-      fullname,
-      phoneNumber,
-      address,
-    });
-    console.log(bookingId, snapToken, snapRedirectUrl);
+      const { type, name } = await this._roomsService.getRoomDetailMidtransById(roomId);
+      const {
+        fullname,
+        phoneNumber,
+        address,
+        // } = await this._usersService.getUserDetailMidtransById(userId);
+      } = await this._usersService.getUserById(userId);
+      console.log(fullname, phoneNumber, address);
 
-    await this._roomsService.editRoomQuantityById(roomId, 1);
-    await this._bookingsService.editBookingStatusById(id, status);
-
-    const response = h.response({
-      status: 'success',
-      message: 'Accept booking berhasil',
-      data: {
-        id: bookingId,
+      const {
+        bookingId,
+        snapToken,
+        snapRedirectUrl,
+      } = await this._bookingsService.postMidtransTransaction({
+        id,
         totalPrice,
         name,
         type,
         fullname,
         phoneNumber,
         address,
-        snapToken,
-        snapRedirectUrl,
-      },
-    });
+      });
+      console.log(bookingId, snapToken, snapRedirectUrl);
 
-    response.code(200);
+      await this._roomsService.reduceRoomQuantityById(roomId, 1);
+      await this._bookingsService.editBookingStatusById(id, status, note);
+
+      response = h.response({
+        status: 'success',
+        message: 'Konfirmasi booking berhasil',
+        data: {
+          id: bookingId,
+          totalPrice,
+          name,
+          type,
+          fullname,
+          phoneNumber,
+          address,
+          snapToken,
+          snapRedirectUrl,
+        },
+      });
+
+      response.code(200);
+    } else if (status === 'rejected') {
+      console.log('status', status);
+      await this._bookingsService.editBookingStatusById(id, status, note);
+
+      response = h.response({
+        status: 'success',
+        message: 'Tolak booking berhasil',
+        data: {
+          note,
+        },
+      });
+
+      response.code(200);
+    }
+
     return response;
   }
 
