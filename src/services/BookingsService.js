@@ -43,20 +43,30 @@ class BookingService {
     return rows[0].id;
   }
 
-  async getBookingsByOwnerId(ownerId) {
-    console.log(ownerId);
+  async getBookingsByRole(userId) {
+    console.log(userId);
     const query = {
-      text: 'SELECT b.room_id, b.start, b.end, b.total_price, b.status, u.fullname FROM bookings AS b LEFT JOIN users AS u ON b.user_id = u.id WHERE b.owner_id = $1',
-      values: [ownerId],
+      text: `SELECT u.fullname, u.gender, k.name, r.type, b.id, b.start, b.end, b.total_price, b.status, b.note,
+      b.snap_redirect_url 
+      FROM bookings AS b 
+      INNER JOIN users AS u 
+      ON b.user_id = u.id
+      INNER JOIN rooms AS r
+      ON b.room_id = r.id
+      INNER JOIN koss AS k
+      ON r.kos_id = k.id
+      WHERE b.owner_id = $1 OR b.user_id = $1`,
+      values: [userId],
     };
 
     const { rows } = await this._pool.query(query);
     console.log(rows);
 
-    if (!rows.length) {
-      throw new NotFoundError('Gagal menampilkan list bookings.');
-    }
+    // if (!rows.length) {
+    //   throw new NotFoundError('Gagal menampilkan list bookings.');
+    // }
 
+    console.log('rows.map(mapDBToModel)', rows.map(mapDBToModel));
     return rows.map(mapDBToModel);
   }
 
@@ -75,13 +85,14 @@ class BookingService {
     return rows.map(mapDBToModel)[0];
   }
 
-  async editBookingStatusById(id, status) {
+  async editBookingStatusById(id, status, note) {
     const query = {
-      text: 'UPDATE bookings SET status = $2 WHERE id = $1 RETURNING id',
-      values: [id, status],
+      text: 'UPDATE bookings SET status = $2, note = $3 WHERE id = $1 RETURNING id',
+      values: [id, status, note],
     };
 
     const { rows } = await this._pool.query(query);
+    console.log('rows', rows);
 
     if (!rows[0].id) {
       throw new NotFoundError('Gagal melakukan update. Booking tidak ditemukan.');
