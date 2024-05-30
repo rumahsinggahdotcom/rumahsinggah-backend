@@ -159,7 +159,7 @@ class UsersService {
     const { rows } = await this._pool.query(query);
     if (!rows.length) {
       // throw new AuthenticationError('Kredensial yang anda berikan salah.');
-      return null
+      return null;
     }
 
     const { id, password: hashedPassword, fullname } = rows[0];
@@ -169,7 +169,7 @@ class UsersService {
       throw new AuthenticationError('Kredensial yang anda berikan salah');
     }
 
-    return { id, fullname, role: 'user'};
+    return { id, fullname, role: 'user' };
   }
 
   async verifyUsersOnly(id) {
